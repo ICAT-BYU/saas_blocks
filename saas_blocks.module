@@ -1,0 +1,226 @@
+<?php
+/**
+ * @file
+ * Block Module to display a breadcrumb as a page title.
+ */
+
+
+ 
+ /**
+ * Implements hook_help.
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function saas_blocks_help($path, $arg) {
+  switch ($path) {
+    case "admin/help#traincrumbs":
+      return '<p>' . t("Displays breadcrumb as a page title with regard to the current URL") . '</p>';
+      break;
+  }
+} 
+
+
+
+/**
+ * Implements hook_block_info().
+ */
+function saas_blocks_block_info() {
+  $blocks['traincrumbs'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Traincrumbs'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+	$blocks['topic_nav'] = array(
+		//The name that will appear in the block list.
+		'info' => t('Topic Page Navigations'),
+		// Will change for each topic page
+		'cache' => DRUPAL_CACHE_PER_PAGE,
+	);
+
+
+  return $blocks;
+}
+
+
+
+/**
+ * Custom content function. 
+ * 
+ * @return 
+ *   training breadcrumb output array
+ */
+function saas_blocks_contents(){
+	// parse URL elements
+	$urlArray = parse_url($_SERVER['REQUEST_URI']);
+
+	// current page path
+	$pageArray = explode("/",trim($urlArray['path'],"/"));
+
+	// get the current page and current type from the url
+	if (isset($pageArray[0])) { $curType = $pageArray[0]; } else { $curType = ""; }
+	if (isset($pageArray[1])) { $curPage = $pageArray[1]; } else { $curPage = ""; }
+
+	// Array of machine => human readable page names
+	$curPageArray = array(
+		"admissions" => "Admissions",
+		"financial_aid" => "Financial Aid",
+		"student_services" => "Student Services",
+		"counseling" => "Counseling",
+		"processing" => "Processing",
+		"registrar" => "Registrar",
+		"other" => "Other",
+		"icat" => "ICAT",
+		"executive_director" => "Executive Director",
+		"technology_applications" => "Technology Applications",
+		"financial_services" => "Financial Services",
+		"treasury_services" => "Treasury Services",
+	);
+
+	// Array of page types
+	$curTypeArray = array(
+		"news" => "News",
+		"positions" => "Positions",
+		"tools" => "Tools",
+		"topics_category" => "topics_category",
+		"topics_title" => "topics_title",
+
+	);
+
+
+	// set human readable variables from machine readable content contained in the url
+	$curPageMachine = $curPage;
+	$curPageHuman = "";
+	if (isset($curPageArray[$curPage])) { $curPageHuman = $curPageArray[$curPage]; }
+			$curPageClass = $curPageMachine;
+			$curPageOffice = $curPageHuman;
+
+			$mainCat = $curPageHuman;
+			$subCat = "";
+			$viewCat = "";
+			$viewTtl = "";
+
+			$curTypeMachine = $curType;
+			$curTypeHuman = "";
+			
+  if (isset($curTypeArray[$curType])) { $curTypeHuman = $curTypeArray[$curType]; }
+	switch($curType) {
+		case "news":
+			isset($_GET["created"]) ? $created=$_GET["created"] : $created=0;
+			switch ($created) {
+				case 5:$subCat = "Archive";break;
+				case 4:$subCat = "This Year";break;
+				case 3:$subCat = "This Month";break;
+				case 2:$subCat = "This Week";break;
+				case 1:$subCat = "Today";break;
+				default: $subCat = "";
+			}
+			break;
+		case "positions": $subCat = $curTypeHuman; break;
+
+		case "tools": break;
+
+    case "topics_category": 
+			$viewCat = '<a href="/topics_category/'.$curPage.'" class="filteroptions selected" title"Category">Category</a>';
+			$viewTtl = '<a href="/topics_title/'.$curPage.'" class="filteroptions" title"Alphabetical">A-Z</a>';
+			break;
+
+		case "topics_title": 
+			$viewCat = '<a href="/topics_category/'.$curPage.'" class="filteroptions" title"Category">Category</a>';
+			$viewTtl = '<a href="/topics_title/'.$curPage.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
+			break;
+		case "topics":
+			$pageTitle = drupal_get_title();;
+			break;
+
+	}
+
+
+	$outPre = '<div class="clearfloats"></div><div id="curSection" class="' .  $curPageClass . '">';
+	$outBody =  $curPageOffice;
+	if(isset($pageTitle)){ $outBody .= " . " . $pageTitle; }
+	if ($subCat != "") { $outBody .= "&nbsp;.&nbsp;" . $subCat; }
+	if ($viewCat != "") { $outBody .= '<div id="topic-exposed-filter">' .$viewCat. '&nbsp;|&nbsp;' .$viewTtl. '</div>'; }
+	$outSuf = '</div>';
+  
+
+	$output = array(
+		'traincrumb output' => array(
+			'#markup' => t($outBody),
+			'#prefix' => t($outPre) ,
+			'#suffix' => t($outSuf),
+		),
+	);
+
+	return $output;
+}
+
+
+
+/**
+ * Custom topic link function. 
+ * 
+ * @return 
+ *   topic page output array
+ */
+
+
+function saas_blocks_topics_links(){
+$path = current_path();
+  $pageArray = explode ("/",$path);
+  $node = node_load($pageArray[1]);
+	$links = '<ul class="topics-navigation">';
+
+		if(!empty($node->field_ac_content)){
+			$content = $node->field_ac_content['und'];
+				
+			foreach($content as $temp){
+				$tmpnode = node_load($temp['target_id']);
+				if(node_access('view', $tmpnode)){
+					if(isset($temp['entity']->field_display_title['und'][0]['safe_value'])){
+					$links .= '<li><a href="#subtitle-' . $temp['target_id'] . '">' . $temp['entity']->field_display_title['und'][0]['safe_value'] . '</a></li>';
+					}
+				}
+			}
+		}
+
+	$links .= '</ul>';
+	$output = array (
+		'#type' => 'markup',
+		'#prefix' => '',
+		'#markup' => $links,
+		'#suffix' => '',
+		);
+
+	return $output;
+}
+/**
+ * Implements hook_block_view().
+ * 
+ * Prepares the contents of the block.
+ */
+function saas_blocks_block_view($block_name = '') {
+
+	drupal_add_css(drupal_get_path('module', 'traincrumbs') . '/css/traincrumbs.css');
+	switch ($block_name) {
+		case 'traincrumbs':
+			$block['subject'] = t('Traincrumbs');
+			$traincrumbs = saas_blocks_contents();
+			$block['content'] = $traincrumbs;  
+			return $block;
+		case 'topic_nav':
+			$block['subject'] = t('Topic Page Navigation');
+			$topic_links = saas_blocks_topics_links();
+			$block['content'] = $topic_links;
+			return $block;
+  }
+
+  
+}
+
+

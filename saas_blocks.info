@@ -1,0 +1,6 @@
+name = SAAS Blocks
+description = Block Module for SAAS training site.
+core = 7.x
+files[] = saas_blocks.module
+stylesheets[all][] = css/saas_blocks.css
+

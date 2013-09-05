@@ -1,0 +1,70 @@
+/* --------------- Current Section ------------ */
+#curSection{
+  margin-top: 0px;
+  height:30px;
+  line-height: 30px;
+  font-size: 15px;
+  color:white;
+  padding-left:30px;
+  background-color:#e6e6e6;
+}
+
+#curSection.admissions{
+  background-color:#203858;
+}
+
+#curSection.financial_aid{
+  background-color:#B1BC33;
+}
+
+#curSection.onestop,
+#curSection.processing,
+#curSection.counseling{
+  background-color:#C74832;
+}
+
+#curSection.registrar{
+  background-color:#7ED2D4;
+}
+
+#curSection.other{
+  background-color:#5c6338
+}
+
+#curSection.icat,
+#curSection.executive_director,
+#curSection.technology_applications,
+#curSection.financial_services,
+#curSection.treasury_services{
+  background-color:#5c6338
+}
+
+/* --- Topic Page Exposed Filter --- */
+#topic-exposed-filter{
+        float:right;
+        margin-right:20px;
+        color:#ffffff;
+
+}
+#topic-exposed-filter a {
+        text-decoration:none;
+        color:#ffffff;
+        opacity:0.60;
+}
+#topic-exposed-filter a.selected{
+        opacity:1;
+}
+
+/* --- Topic Page Navigation Block --- */
+.topics-navigation{
+  list-style-type:none;
+	padding-left:10px;
+}
+.topics-navigation li{
+	margin-bottom:10px;
+}
+.topics-navigation a{
+	text-decoration:none;
+	color:#4D6079;
+
+}
