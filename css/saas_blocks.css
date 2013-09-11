@@ -13,9 +13,11 @@
   background-color:#203858;
 }
 
-#curSection.financial_aid{
+#curSection.financial_aid, 
+#curSection.financial-aid{
   background-color:#B1BC33;
 }
+
 
 #curSection.onestop,
 #curSection.processing,
@@ -35,7 +37,12 @@
 #curSection.executive_director,
 #curSection.technology_applications,
 #curSection.financial_services,
-#curSection.treasury_services{
+#curSection.treasury_services,
+#curSection.ICAT,
+#curSection.executive-director,
+#curSection.technology-applications,
+#curSection.financial-services,
+#curSection.treasury-services{
   background-color:#5c6338
 }
 

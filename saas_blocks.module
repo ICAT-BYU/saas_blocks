@@ -70,16 +70,23 @@ function saas_blocks_contents(){
 	$curPageArray = array(
 		"admissions" => "Admissions",
 		"financial_aid" => "Financial Aid",
+		"financial-aid" => "Financial Aid",
 		"student_services" => "Student Services",
+		"student-services" => "Student Services",
 		"counseling" => "Counseling",
 		"processing" => "Processing",
 		"registrar" => "Registrar",
 		"other" => "Other",
 		"icat" => "ICAT",
+		"ICAT" => "ICAT",
 		"executive_director" => "Executive Director",
+		"executive-director" => "Executive Director",
 		"technology_applications" => "Technology Applications",
+		"technology-applications" => "Technology Applications",
 		"financial_services" => "Financial Services",
+		"financial-services" => "Financial Services",
 		"treasury_services" => "Treasury Services",
+		"treasury-services" => "Treasury Services",
 	);
 
 	// Array of page types
