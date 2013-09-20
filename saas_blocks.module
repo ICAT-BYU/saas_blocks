@@ -137,14 +137,14 @@ function saas_blocks_contents(){
 
 		case "tools": break;
 
-    case "topics_category": 
-			$viewCat = '<a href="/topics_category/'.$curPage.'" class="filteroptions selected" title"Category">Category</a>';
-			$viewTtl = '<a href="/topics_title/'.$curPage.'" class="filteroptions" title"Alphabetical">A-Z</a>';
+    case "topics-category": 
+			$viewCat = '<a href="/topics-category/'.$curPage.'" class="filteroptions selected" title"Category">Category</a>';
+			$viewTtl = '<a href="/topics-title/'.$curPage.'" class="filteroptions" title"Alphabetical">A-Z</a>';
 			break;
 
-		case "topics_title": 
-			$viewCat = '<a href="/topics_category/'.$curPage.'" class="filteroptions" title"Category">Category</a>';
-			$viewTtl = '<a href="/topics_title/'.$curPage.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
+		case "topics-title": 
+			$viewCat = '<a href="/topics-category/'.$curPage.'" class="filteroptions" title"Category">Category</a>';
+			$viewTtl = '<a href="/topics-title/'.$curPage.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
 			break;
 		case "topics":
 			$pageTitle = drupal_get_title();;
