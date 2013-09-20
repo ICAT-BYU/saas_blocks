@@ -30,21 +30,26 @@ function saas_blocks_help($path, $arg) {
  * Implements hook_block_info().
  */
 function saas_blocks_block_info() {
-  $blocks['traincrumbs'] = array(
-    // The name that will appear in the block list.
-    'info' => t('Traincrumbs'),
-    // Default setting.
-    'cache' => DRUPAL_CACHE_PER_ROLE,
-  );
-	$blocks['topic_nav'] = array(
-		//The name that will appear in the block list.
-		'info' => t('Topic Page Navigations'),
-		// Will change for each topic page
-		'cache' => DRUPAL_CACHE_PER_PAGE,
-	);
+    $blocks['traincrumbs'] = array(
+        // The name that will appear in the block list.
+        'info' => t('Traincrumbs'),
+        // Default setting.
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['topic_nav'] = array(
+        //The name that will appear in the block list.
+        'info' => t('Topic Page Navigation'),
+        // Will change for each topic page
+        'cache' => DRUPAL_CACHE_PER_PAGE,
+    );
+    $blocks['topic_category_nav'] = array(
+        //The name that will appear in the block list.
+        'info' => t('Topic Category Page Navigation'),
+        // Will change for each topic category page
+        'cache' => DRUPAL_CACHE_PER_PAGE,
+    );
 
-
-  return $blocks;
+    return $blocks;
 }
 
 
@@ -168,15 +173,12 @@ function saas_blocks_contents(){
 }
 
 
-
 /**
  * Custom topic link function. 
  * 
  * @return 
  *   topic page output array
  */
-
-
 function saas_blocks_topics_links(){
 $path = current_path();
   $pageArray = explode ("/",$path);
@@ -206,6 +208,62 @@ $path = current_path();
 
 	return $output;
 }
+
+
+/**
+ * Custom topic link function. 
+ * 
+ * @return 
+ *   topic page output array
+ */
+function saas_blocks_topic_categories_links(){
+    // Create an Array of Taxonomy Fields
+    $results = db_query("SELECT field_name FROM field_config WHERE (type = 'taxonomy_term_reference') AND (field_name like '%_category') ");
+    $taxFields = Array();
+    foreach($results as $line) {
+        $taxFields[] = $line->field_name;
+    }
+
+    // Get the current View
+    $path = current_path();
+    $pageArray = explode ("/",$path);
+    $view = views_get_view_result("topics_category","default",$pageArray[1]);
+    $taxTerms = Array();
+    foreach($view as $nodeInfo) {
+        //dpm($nodeInfo->nid);
+        $node = node_load($nodeInfo->nid);
+        foreach($taxFields as $tf) {
+            if (isset($node->$tf)) {
+                $tmp = $node->$tf;
+                if (isset($tmp["und"][0]["tid"])) {
+                    //dpm($tmp["und"][0]["tid"]);
+                    $term = taxonomy_term_load($tmp["und"][0]["tid"]);
+                    $taxTerms[] = $term->name;
+                }
+            }
+        }    
+    }
+    // Get a Unique, Sorted list of Taxonomy Terms 
+    $Taxonomy = array_unique($taxTerms);
+    sort($Taxonomy);
+    
+	$links = '<ul class="topics-navigation">';
+    foreach($Taxonomy as $item) {
+        $links .= '<li><a href="#' . $item . '">' . $item . '</a></li>';
+    }
+	$links .= '</ul>';
+    
+    $output = array (
+        '#type' => 'markup',
+        '#prefix' => '',
+        '#markup' => $links,
+        '#suffix' => '',
+        );
+
+    return $output;
+}
+
+
 /**
  * Implements hook_block_view().
  * 
@@ -224,6 +282,11 @@ function saas_blocks_block_view($block_name = '') {
 			$block['subject'] = t('Topic Page Navigation');
 			$topic_links = saas_blocks_topics_links();
 			$block['content'] = $topic_links;
+			return $block;
+		case 'topic_category_nav':
+			$block['subject'] = t('Topic Category Page Navigation');
+			$topic_categories_links = saas_blocks_topic_categories_links();
+			$block['content'] = $topic_categories_links;
 			return $block;
   }
 
