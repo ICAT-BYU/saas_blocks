@@ -217,6 +217,7 @@ $path = current_path();
  *   topic page output array
  */
 function saas_blocks_topic_categories_links(){
+    global $user;
     // Create an Array of Taxonomy Fields
     $results = db_query("SELECT field_name FROM field_config WHERE (type = 'taxonomy_term_reference') AND (field_name like '%_category') ");
     $taxFields = Array();
@@ -230,18 +231,19 @@ function saas_blocks_topic_categories_links(){
     $view = views_get_view_result("topics_category","default",$pageArray[1]);
     $taxTerms = Array();
     foreach($view as $nodeInfo) {
-        //dpm($nodeInfo->nid);
         $node = node_load($nodeInfo->nid);
-        foreach($taxFields as $tf) {
-            if (isset($node->$tf)) {
-                $tmp = $node->$tf;
-                if (isset($tmp["und"][0]["tid"])) {
-                    //dpm($tmp["und"][0]["tid"]);
-                    $term = taxonomy_term_load($tmp["und"][0]["tid"]);
-                    $taxTerms[] = $term->name;
+        if (node_access('view',$node,$user)) {
+            foreach($taxFields as $tf) {
+                if (isset($node->$tf)) {
+                    $tmp = $node->$tf;
+                    if (isset($tmp["und"][0]["tid"])) {
+                        //dpm($tmp["und"][0]["tid"]);
+                        $term = taxonomy_term_load($tmp["und"][0]["tid"]);
+                        $taxTerms[] = $term->name;
+                    }
                 }
             }
-        }    
+        }
     }
     // Get a Unique, Sorted list of Taxonomy Terms 
     $Taxonomy = array_unique($taxTerms);
