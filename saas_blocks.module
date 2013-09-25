@@ -234,17 +234,18 @@ function saas_blocks_node_permissions(){
     $path = current_path();
     $pageArray = explode ("/",$path);
     $node = node_load($pageArray[1]);
-    $links = '<div class="node-permission-block"><h3>Permissions</h3><ul>';
+    $links = '<div class="node-permission-block"><ul>';
     if(!empty($node->field_ac_content)){
         $content = $node->field_ac_content['und'];
         foreach($content as $temp){
             $tmpnode = node_load($temp['target_id']);
             if(node_access('view', $tmpnode)){
-                $links .= '<li class="node">'. $temp['entity']->field_display_title['und'][0]['safe_value'] . '</li>';
+                $links .= '<li class="node"><a href="#subtitle-' . $temp['target_id'] . '">' . $temp['entity']->field_display_title['und'][0]['safe_value'] . '</a></li>';
+                $tmp = "<div class='tooltip'><b>". $temp['entity']->field_display_title['und'][0]['safe_value'] . '</b><br>'; 
+                $tmpCnt = 0;
+ 
                 // GROUPS
                 $results = db_query($grpSQL . "AND (rpa.node_id = " . $temp['target_id'] . ") ORDER BY rg.machine_name,rpa.permission_type");
-                $tmp = ""; $tmpCnt = 0;
-                $tmp .= '<ul class="perms"><li class="ug">Groups</li>';
                 $crnt = ""; $pv = 0; $pu = 0; $pd = 0;
                 foreach($results as $line) {
                     if ($crnt != $line->machine_name) {
@@ -256,25 +257,22 @@ function saas_blocks_node_permissions(){
                     if($line->permission_type == "delete") $pd = 1;
                 }
                 if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
-                $tmp .= '</ul>';
-                if ($tmpCnt > 0) {$links .= $tmp;} 
                 
                 // USERS
                 $results = db_query($usrSQL . "AND (rpa.node_id = " . $temp['target_id'] . ") ORDER BY u.name,rpa.permission_type");
-                $tmp = ""; $tmpCnt = 0;
-                $tmp .=  '<ul class="perms"><li class="ug">Users</li>';
                 $crnt = ""; $pv = 0; $pu = 0; $pd = 0;
                 foreach($results as $line) {
                     if ($crnt != $line->name) {
-                        if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
+                        if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;<i>" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</i></br>"; $tmpCnt++; }
                         $crnt = $line->name; $pv = 0; $pu = 0; $pd = 0;
                     }
                     if($line->permission_type == "view") $pv = 1;
                     if($line->permission_type == "update") $pu = 1;
                     if($line->permission_type == "delete") $pd = 1;
                 }
-                if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
-                $tmp .= '</ul>';
+                if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;<i>" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</i></br>"; $tmpCnt++; }
+
+                $tmp .= "</div>";
                 if ($tmpCnt > 0) {$links .= $tmp;} 
              }
         }
