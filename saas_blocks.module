@@ -48,6 +48,12 @@ function saas_blocks_block_info() {
         // Will change for each topic category page
         'cache' => DRUPAL_CACHE_PER_PAGE,
     );
+    $blocks['node_permissions'] = array(
+        //The name that will appear in the block list.
+        'info' => t('Node Permissions 4CMs'),
+        // Will change for each topic category page
+        'cache' => DRUPAL_CACHE_PER_PAGE,
+    );
 
     return $blocks;
 }
@@ -180,7 +186,7 @@ function saas_blocks_contents(){
  *   topic page output array
  */
 function saas_blocks_topics_links(){
-$path = current_path();
+  $path = current_path();
   $pageArray = explode ("/",$path);
   $node = node_load($pageArray[1]);
 	$links = '<ul class="topics-navigation">';
@@ -209,6 +215,82 @@ $path = current_path();
 	return $output;
 }
 
+/**
+ * Custom topic link function. 
+ * 
+ * @return 
+ *   topic page output array
+ */
+function saas_blocks_node_permissions(){
+    $grpSQL = "SELECT rpa.permission_type, rg.machine_name FROM rap_permission_assignment rpa ";
+    $grpSQL .= "JOIN rap_group rg ";
+    $grpSQL .= "ON rg.id = rpa.master_id ";
+    $grpSQL .= "WHERE (rpa.master_type = 'group') ";
+    $usrSQL = "SELECT rpa.permission_type, u.name FROM rap_permission_assignment rpa ";
+    $usrSQL .= "JOIN users u ";
+    $usrSQL .= "ON u.uid = rpa.master_id ";
+    $usrSQL .= "WHERE (rpa.master_type = 'user') ";
+
+    $path = current_path();
+    $pageArray = explode ("/",$path);
+    $node = node_load($pageArray[1]);
+    $links = '<div class="node-permission-block"><h3>Permissions</h3><ul>';
+    if(!empty($node->field_ac_content)){
+        $content = $node->field_ac_content['und'];
+        foreach($content as $temp){
+            $tmpnode = node_load($temp['target_id']);
+            if(node_access('view', $tmpnode)){
+                $links .= '<li class="node">'. $temp['entity']->field_display_title['und'][0]['safe_value'] . '</li>';
+                // GROUPS
+                $results = db_query($grpSQL . "AND (rpa.node_id = " . $temp['target_id'] . ") ORDER BY rg.machine_name,rpa.permission_type");
+                $tmp = ""; $tmpCnt = 0;
+                $tmp .= '<ul class="perms"><li class="ug">Groups</li>';
+                $crnt = ""; $pv = 0; $pu = 0; $pd = 0;
+                foreach($results as $line) {
+                    if ($crnt != $line->machine_name) {
+                        if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
+                        $crnt = $line->machine_name; $pv = 0; $pu = 0; $pd = 0;
+                    }
+                    if($line->permission_type == "view") $pv = 1;
+                    if($line->permission_type == "update") $pu = 1;
+                    if($line->permission_type == "delete") $pd = 1;
+                }
+                if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
+                $tmp .= '</ul>';
+                if ($tmpCnt > 0) {$links .= $tmp;} 
+                
+                // USERS
+                $results = db_query($usrSQL . "AND (rpa.node_id = " . $temp['target_id'] . ") ORDER BY u.name,rpa.permission_type");
+                $tmp = ""; $tmpCnt = 0;
+                $tmp .=  '<ul class="perms"><li class="ug">Users</li>';
+                $crnt = ""; $pv = 0; $pu = 0; $pd = 0;
+                foreach($results as $line) {
+                    if ($crnt != $line->name) {
+                        if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
+                        $crnt = $line->name; $pv = 0; $pu = 0; $pd = 0;
+                    }
+                    if($line->permission_type == "view") $pv = 1;
+                    if($line->permission_type == "update") $pu = 1;
+                    if($line->permission_type == "delete") $pd = 1;
+                }
+                if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</br>"; $tmpCnt++; }
+                $tmp .= '</ul>';
+                if ($tmpCnt > 0) {$links .= $tmp;} 
+             }
+        }
+    }
+	$links .= '</ul></div>';
+	$output = array (
+		'#type' => 'markup',
+		'#prefix' => '',
+		'#markup' => $links,
+		'#suffix' => '',
+		);
+
+	return $output;
+    
+// $temp['target_id']
+}
 
 /**
  * Custom topic link function. 
@@ -237,7 +319,6 @@ function saas_blocks_topic_categories_links(){
                 if (isset($node->$tf)) {
                     $tmp = $node->$tf;
                     if (isset($tmp["und"][0]["tid"])) {
-                        //dpm($tmp["und"][0]["tid"]);
                         $term = taxonomy_term_load($tmp["und"][0]["tid"]);
                         $taxTerms[] = $term->name;
                     }
@@ -290,9 +371,14 @@ function saas_blocks_block_view($block_name = '') {
 			$topic_categories_links = saas_blocks_topic_categories_links();
 			$block['content'] = $topic_categories_links;
 			return $block;
+		case 'node_permissions':
+			$block['subject'] = t('Node Permissions 4CMs');
+			$node_permissions = saas_blocks_node_permissions();
+			$block['content'] = $node_permissions;
+			return $block;
   }
 
   
 }
 
-
+ 

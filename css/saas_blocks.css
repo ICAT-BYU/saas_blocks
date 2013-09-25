@@ -76,3 +76,22 @@
 	color:#4D6079;
 
 }
+
+/* --- Node Permission Block --- */
+.node-permission-block{
+  list-style-type:none;
+  color:#4D6079;
+  font-size:0.90em;
+}
+.node-permission-block .node{
+  list-style-type:none;
+  margin-left:-20px;
+  font-weight: bold;
+  padding-left:5px;
+}
+.node-permission-block .perms{
+    margin-left:-20px;
+	margin-bottom:0px;
+    color:#444444;
+}
+
