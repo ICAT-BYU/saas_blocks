@@ -54,6 +54,12 @@ function saas_blocks_block_info() {
         // Will change for each topic category page
         'cache' => DRUPAL_CACHE_PER_PAGE,
     );
+        $blocks['icat_power'] = array(
+        //The name that will appear in the block list.
+        'info' => t('Powered By ICAT'),
+        // Will change for each topic category page
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
 
     return $blocks;
 }
@@ -246,19 +252,10 @@ function saas_blocks_node_permissions(){
         foreach($content as $temp){
             $tmpnode = node_load($temp['target_id']);
             if(node_access('view', $tmpnode)){
-                
-                if (isset($temp['entity']->field_display_title['und'][0]['safe_value'])) { 
-                    $nodeTitle = $temp['entity']->field_display_title['und'][0]['safe_value']; 
-                    $links .= '<li class="node"><a href="#subtitle-' . $temp['target_id'] . '">' . $nodeTitle . '</a></li>';
-                } else {
-                    $nodeTitle = $temp['entity']->title;
-                    if ($tooltips) {
-                        $links .= '<li class="node-child">' . $nodeTitle . '</li>';
-                    } 
-                }
+                $links .= '<li class="node"><a href="#subtitle-' . $temp['target_id'] . '">' . $temp['entity']->field_display_title['und'][0]['safe_value'] . '</a></li>';
                 
                 if ($tooltips) {
-                    $tmp = "<div class='tooltip'><b>". $nodeTitle . '</b><br>'; 
+                    $tmp = "<div class='tooltip'><b>". $temp['entity']->field_display_title['und'][0]['safe_value'] . '</b><br>'; 
                     $tmpCnt = 0;
      
                     // GROUPS
@@ -361,6 +358,32 @@ function saas_blocks_topic_categories_links(){
     return $output;
 }
 
+/**
+ * Custom footer links function. 
+ * 
+ * @return 
+ *   topic page output array
+ */
+function saas_blocks_icat_power(){
+  $markup = '';
+  $module_path = drupal_get_path('module', 'saas_blocks');
+  $markup .= '<div class="icat_power_block"><div class="link-list">';
+  $markup .= '<a href="http://b4byu.com/" target="_blank"><img src="/' . $module_path . '/images/ADM.png"></a>';
+  $markup .= '<a href="http://financialaid.byu.edu" target="_blank"><img src="/' . $module_path . '/images/FA.png"></a>';
+  $markup .= '<a href="http://icat.byu.edu" target="_blank"><img src="/' . $module_path . '/images/ICAT.png"></a>';
+  $markup .= '<a href="http://onestop.byu.edu" target="_blank"><img src="/' . $module_path . '/images/OS.png"></a>';
+  $markup .= '<a href="http://registrar.byu.edu" target="_blank"><img src="/' . $module_path . '/images/REG.png"></a>';
+  $markup .= '<div class="icat_power">Powered by ICAT</div>';
+  $markup .= '</div></div>';
+  
+  $output = array (
+  '#type' => 'markup',
+  '#markup' => $markup,
+  );
+  
+  return $output;
+}
+
 
 /**
  * Implements hook_block_view().
@@ -390,6 +413,11 @@ function saas_blocks_block_view($block_name = '') {
 			$block['subject'] = t('Node Permissions 4CMs');
 			$node_permissions = saas_blocks_node_permissions();
 			$block['content'] = $node_permissions;
+			return $block;
+    case 'icat_power':
+			$block['subject'] = t('Powered by ICAT');
+			$icat_power = saas_blocks_icat_power();
+			$block['content'] = $icat_power;
 			return $block;
   }
 
