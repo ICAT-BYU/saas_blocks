@@ -79,14 +79,22 @@
 
 /* --- Node Permission Block --- */
 .node-permission-block{
+  margin-top:2px;
   list-style-type:none;
   color:#4D6079;
 }
-.node-permission-block .node{
+.node-permission-block .node {
   list-style-type:none;
   margin-left:-20px;
-  margin-bottom:10px;
+  line-height:2em;
   text-decoration:none;
+}
+.node-permission-block .node-child {
+  list-style-type:none;
+  margin-left:-10px;
+  line-height:1.3em;
+  text-decoration:none;
+  font-size:0.70em;
 }
 .node-permission-block .node a{
  	text-decoration:none;
@@ -113,5 +121,8 @@
   transform:translate(100px,0px);
 }
 .node-permission-block .node:hover + .tooltip{
+ display:block;
+}
+.node-permission-block .node-child:hover + .tooltip{
  display:block;
 }
