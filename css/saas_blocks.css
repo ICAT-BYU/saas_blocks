@@ -82,11 +82,18 @@
   list-style-type:none;
   color:#4D6079;
 }
-.node-permission-block .node{
+.node-permission-block .node {
   list-style-type:none;
   margin-left:-20px;
-  margin-bottom:10px;
+  line-height:1.5em;
   text-decoration:none;
+}
+.node-permission-block .node-child {
+  list-style-type:none;
+  margin-left:-10px;
+  line-height:1.3em;
+  text-decoration:none;
+  font-size:0.70em;
 }
 .node-permission-block .node a{
  	text-decoration:none;
