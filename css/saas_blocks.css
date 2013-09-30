@@ -123,6 +123,9 @@
 .node-permission-block .node:hover + .tooltip{
  display:block;
 }
+.node-permission-block .node-child:hover + .tooltip{
+ display:block;
+}
 
 /* --- Powered by ICAT Block --- */
 
