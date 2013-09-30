@@ -252,10 +252,19 @@ function saas_blocks_node_permissions(){
         foreach($content as $temp){
             $tmpnode = node_load($temp['target_id']);
             if(node_access('view', $tmpnode)){
-                $links .= '<li class="node"><a href="#subtitle-' . $temp['target_id'] . '">' . $temp['entity']->field_display_title['und'][0]['safe_value'] . '</a></li>';
+                
+                if (isset($temp['entity']->field_display_title['und'][0]['safe_value'])) { 
+                    $nodeTitle = $temp['entity']->field_display_title['und'][0]['safe_value']; 
+                    $links .= '<li class="node"><a href="#subtitle-' . $temp['target_id'] . '">' . $nodeTitle . '</a></li>';
+                } else {
+                    $nodeTitle = $temp['entity']->title;
+                    if ($tooltips) {
+                        $links .= '<li class="node-child">' . $nodeTitle . '</li>';
+                    } 
+                }
                 
                 if ($tooltips) {
-                    $tmp = "<div class='tooltip'><b>". $temp['entity']->field_display_title['und'][0]['safe_value'] . '</b><br>'; 
+                    $tmp = "<div class='tooltip'><b>". $nodeTitle . '</b><br>'; 
                     $tmpCnt = 0;
      
                     // GROUPS
