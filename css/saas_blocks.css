@@ -141,3 +141,21 @@
   font-style:italic;
   text-align:right;
 }
+
+/* --- User groups & roles --- */
+
+.saasblock-groups-roles{
+  color:#4D6079;
+  line-height:1.8em;
+}
+.saasblock-groups-roles ul{
+  padding:0px;
+  margin:0px;
+}
+.saasblock-groups-roles li{
+  list-style-type:none;
+  line-height:1.5em;
+  font-size:0.9em;
+  margin-left:20px;
+  text-transform:capitalize;
+}
