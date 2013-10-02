@@ -143,7 +143,6 @@
 }
 
 /* --- User groups & roles --- */
-
 .saasblock-groups-roles{
   color:#4D6079;
   line-height:1.8em;
@@ -159,3 +158,35 @@
   margin-left:20px;
   text-transform:capitalize;
 }
+
+/* --- Training Quiz Index --- */
+.saasblock-training-index{
+  color:#4D6079;
+  font-size:0.75em;
+  line-height:1.5em;
+  font-weight:normal;
+}
+.saasblock-training-index a{
+  margin-left:10px;
+  color:#6b84a7;
+  text-decoration:none;
+  white-space: nowrap;
+
+}
+.saasblock-training-index h2{
+  font-size:1.4em;
+  line-height:2.3em;
+  padding:0;
+  margin:0;
+}
+.saasblock-training-index h3{
+  font-size:1.1em;
+  line-height:1.8em;
+  font-weight:bold;
+  padding:0;
+  margin:0;
+}
+.saasblock-training-current{
+  font-weight:bold;
+}
+

@@ -36,16 +36,6 @@ function saas_blocks_block_info() {
         // Default setting.
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
-
-/*    
-    $blocks['topic_nav'] = array(
-        //The name that will appear in the block list.
-        'info' => t('Topic Page Navigation'),
-        // Will change for each topic page
-        'cache' => DRUPAL_CACHE_PER_PAGE,
-    );
-*/
-
     $blocks['topic_category_nav'] = array(
         //The name that will appear in the block list.
         'info' => t('Topic Category Page Navigation'),
@@ -58,15 +48,21 @@ function saas_blocks_block_info() {
         // Will change for each topic category page
         'cache' => DRUPAL_CACHE_PER_PAGE,
     );
-        $blocks['icat_power'] = array(
+    $blocks['icat_power'] = array(
         //The name that will appear in the block list.
         'info' => t('Powered By ICAT'),
         // Will change for each topic category page
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
-        $blocks['user_profile_info'] = array(
+    $blocks['user_profile_info'] = array(
         //The name that will appear in the block list.
         'info' => t('Users Profile Information'),
+        // Will change for each topic category page
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    $blocks['training_module_index'] = array(
+        //The name that will appear in the block list.
+        'info' => t('Training Module Index'),
         // Will change for each topic category page
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
@@ -194,44 +190,6 @@ function saas_blocks_contents(){
 	return $output;
 }
 
-
-/**
- * Custom topic link function. 
- * 
- * @return 
- *   topic page output array
- */
- /*
-function saas_blocks_topics_links(){
-  $path = current_path();
-  $pageArray = explode ("/",$path);
-  $node = node_load($pageArray[1]);
-	$links = '<ul class="topics-navigation">';
-
-		if(!empty($node->field_ac_content)){
-			$content = $node->field_ac_content['und'];
-				
-			foreach($content as $temp){
-				$tmpnode = node_load($temp['target_id']);
-				if(node_access('view', $tmpnode)){
-					if(isset($temp['entity']->field_display_title['und'][0]['safe_value'])){
-					$links .= '<li><a href="#subtitle-' . $temp['target_id'] . '">' . $temp['entity']->field_display_title['und'][0]['safe_value'] . '</a></li>';
-					}
-				}
-			}
-		}
-
-	$links .= '</ul>';
-	$output = array (
-		'#type' => 'markup',
-		'#prefix' => '',
-		'#markup' => $links,
-		'#suffix' => '',
-		);
-
-	return $output;
-}
-*/
 
 /**
  * Custom topic link function. 
@@ -379,6 +337,103 @@ function saas_blocks_topic_categories_links(){
     return $output;
 }
 
+
+
+/**
+ * Quick Links for Training Test 
+ * 
+ * @return 
+ *   List of Nodes to Review + Quiz to take
+ */
+function saas_blocks_training_index(){
+    // if FROM TEST PAGE - reload page with quiz in the URL
+    $referer = $_SERVER['HTTP_REFERER'];
+    $refererArray = explode ("/",$referer);
+    $isContent = array_search("content", $refererArray);
+    if ($isContent !== false) {
+        if (isset($refererArray[$isContent+1])) {
+        $url = $_SERVER['REQUEST_URI'];
+        $newUrl = parse_url($url, PHP_URL_PATH) . "?quiz=" . $refererArray[$isContent+1];
+        drupal_add_js("window.location.replace('". $newUrl ."');", 'inline');
+        }
+    }
+
+    drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('#content').hide().fadeIn(300); });    }(jQuery));", 'inline');
+    drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('.saasblock-training-index a').click(function(){ $('#content').fadeOut(200); });  });   }(jQuery));", 'inline');
+    drupal_add_js("function loadPage(url) { location.href=url; }", 'inline');
+    
+    
+    $path = current_path();
+    $markup = '';
+    $markup .= '<div CLASS="saasblock-training-index">';
+
+    if (isset($_GET['quiz'])) {
+        $quiz = $_GET['quiz'];
+        $human = ucwords(strtolower(str_replace("-"," ",$quiz))); 
+        $markup .= "<h2>".$human."</h2>";
+        $alias = "content/" . $quiz;
+        $source = drupal_lookup_path('source', $alias);
+        $node = trim($source,"node/");
+
+        // TOPICS
+        $markup .= "<h3>Topics</h3>";
+        $sql = "SELECT n.title, n.nid FROM node n ";
+        $sql .= "JOIN field_data_field_training_topics ftt ";
+        $sql .= "ON n.nid = ftt.field_training_topics_target_id ";
+        $sql .= "WHERE ftt.entity_id = ".$node." ";
+        $sql .= "ORDER BY ftt.delta";
+        $topics = db_query($sql);
+        foreach($topics as $line) {
+            $thisTitle = $line->title;
+            $thisNID = $line->nid;
+            $thisSource = "node/" . $thisNID;
+            if ($thisSource == $path) {
+                $addClass = " CLASS='saasblock-training-current'";
+            } else {
+                $addClass = "";
+            }
+            $thisAlias = drupal_lookup_path('alias', $thisSource);
+            $newURL = "/" .$thisAlias. "?quiz=" .$quiz;
+            if (strlen($thisTitle) > 25) {$thisTitle = substr($thisTitle,0,25) . "...";}
+            $markup .= "<A HREF='javascript:void(0);' onClick='loadPage(\"" .$newURL. "\");'" .$addClass. ">" .$thisTitle. "</a><br>";
+        }
+        
+        $markup .= '<h3>Quiz</h3>';
+        
+        // ASSESSMENTS
+        $sql = "SELECT n.title, n.nid FROM node n ";
+        $sql .= "JOIN field_data_field_training_assessment fta ";
+        $sql .= "ON n.nid = fta.field_training_assessment_target_id ";
+        $sql .= "WHERE fta.entity_id = ".$node." ";
+        $sql .= "ORDER BY fta.delta";
+        $assessments = db_query($sql);
+        foreach($assessments as $line) {
+            $thisTitle = $line->title;
+            $thisNID = $line->nid;
+            $thisSource = "node/" . $thisNID;
+            if ($thisSource == $path) {
+                $addClass = " CLASS='saasblock-training-current'";
+            } else {
+                $addClass = "";
+            }
+            $thisAlias = drupal_lookup_path('alias', $thisSource);
+            $newURL = "/" .$thisAlias. "?quiz=" .$quiz;
+            if (strlen($thisTitle) > 25) {$thisTitle = substr($thisTitle,0,25) . "...";}
+            $markup .= "<A HREF='javascript:void(0);' onClick='loadPage(\"" .$newURL. "\");'" .$addClass. ">" .substr($thisTitle,0,20). "</a><br>";
+        }
+        
+       
+    }
+    $markup .= '</div>';
+    $output = array (
+        '#type' => 'markup',
+        '#markup' => $markup,
+    );
+
+    return $output;
+}
+
+
 /**
  * Custom footer links function. 
  * 
@@ -471,13 +526,6 @@ function saas_blocks_block_view($block_name = '') {
 			$traincrumbs = saas_blocks_contents();
 			$block['content'] = $traincrumbs;  
 			return $block;
-/*
-        case 'topic_nav':
-			$block['subject'] = t('Topic Page Navigation');
-			$topic_links = saas_blocks_topics_links();
-			$block['content'] = $topic_links;
-			return $block;
-*/
         case 'topic_category_nav':
 			$block['subject'] = t('Topic Category Page Navigation');
 			$topic_categories_links = saas_blocks_topic_categories_links();
@@ -488,18 +536,24 @@ function saas_blocks_block_view($block_name = '') {
 			$node_permissions = saas_blocks_node_permissions();
 			$block['content'] = $node_permissions;
 			return $block;
-    case 'icat_power':
+        case 'icat_power':
 			$block['subject'] = t('Powered by ICAT');
 			$icat_power = saas_blocks_icat_power();
 			$block['content'] = $icat_power;
 			return $block;
-    case 'user_profile_info':
+        case 'user_profile_info':
 			$block['subject'] = t('Users Profile Information');
 			$profile_info = saas_blocks_profile_info();
 			$block['content'] = $profile_info;
+			return $block;
+        case 'training_module_index':
+			$block['subject'] = t('Training Module Index');
+			$training_index = saas_blocks_training_index();
+			$block['content'] = $training_index;
 			return $block;
   }
 
   
 }
+
 
