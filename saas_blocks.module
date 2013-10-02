@@ -369,11 +369,11 @@ function saas_blocks_training_index(){
 
     if (isset($_GET['quiz'])) {
         $quiz = $_GET['quiz'];
-        $human = ucwords(strtolower(str_replace("-"," ",$quiz))); 
-        $markup .= "<h2>".$human."</h2>";
         $alias = "content/" . $quiz;
         $source = drupal_lookup_path('source', $alias);
         $node = trim($source,"node/");
+        $nodeInfo = node_load($node);
+        $markup .= "<h2>".$nodeInfo->title."</h2>";
 
         // TOPICS
         $markup .= "<h3>Topics</h3>";
