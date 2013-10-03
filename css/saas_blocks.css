@@ -168,14 +168,12 @@
 }
 .saasblock-training-index a{
   margin-left:10px;
-  color:#6b84a7;
   text-decoration:none;
-  white-space: nowrap;
-
+  color:#6b84a7;
 }
 .saasblock-training-index h2{
-  font-size:1.4em;
-  line-height:1.3em;
+  font-size:1.2em;
+  line-height:1.1em;
   padding:0;
   margin:0px 0px 10px 0px;
 }
@@ -186,7 +184,9 @@
   padding:0;
   margin:0;
 }
-.saasblock-training-current{
+.saasblock-training-index .saasblock-training-current{
   font-weight:bold;
+  color:#a7706b;
+
 }
 

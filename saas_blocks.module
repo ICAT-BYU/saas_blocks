@@ -346,32 +346,20 @@ function saas_blocks_topic_categories_links(){
  *   List of Nodes to Review + Quiz to take
  */
 function saas_blocks_training_index(){
-    // if FROM TEST PAGE - reload page with quiz in the URL
-    $referer = $_SERVER['HTTP_REFERER'];
-    $refererArray = explode ("/",$referer);
-    $isContent = array_search("content", $refererArray);
-    if ($isContent !== false) {
-        if (isset($refererArray[$isContent+1])) {
-        $url = $_SERVER['REQUEST_URI'];
-        $newUrl = parse_url($url, PHP_URL_PATH) . "?quiz=" . $refererArray[$isContent+1];
-        drupal_add_js("window.location.replace('". $newUrl ."');", 'inline');
-        }
-    }
-
+    
     drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('#content').hide().fadeIn(300); });    }(jQuery));", 'inline');
     drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('.saasblock-training-index a').click(function(){ $('#content').fadeOut(200); });  });   }(jQuery));", 'inline');
     drupal_add_js("function loadPage(url) { location.href=url; }", 'inline');
-    
-    
+     
     $path = current_path();
     $markup = '';
     $markup .= '<div CLASS="saasblock-training-index">';
 
     if (isset($_GET['quiz'])) {
         $quiz = $_GET['quiz'];
-        $alias = "content/" . $quiz;
-        $source = drupal_lookup_path('source', $alias);
-        $node = trim($source,"node/");
+        $source = "node/" . $quiz;
+        $alias = drupal_lookup_path('alias', $source);
+        $node = $quiz;
         $nodeInfo = node_load($node);
         $markup .= "<h2>".$nodeInfo->title."</h2>";
 
