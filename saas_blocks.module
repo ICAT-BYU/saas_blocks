@@ -66,6 +66,12 @@ function saas_blocks_block_info() {
         // Will change for each topic category page
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
+    $blocks['user_import'] = array(
+        //The name that will appear in the block list.
+        'info' => t('User Import Block'),
+        // Will change for each topic category page
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
 
     return $blocks;
 }
@@ -346,22 +352,34 @@ function saas_blocks_topic_categories_links(){
  *   List of Nodes to Review + Quiz to take
  */
 function saas_blocks_training_index(){
-    
+    // if FROM TEST PAGE - reload page with quiz in the URL
+    $referer = $_SERVER['HTTP_REFERER'];
+    $refererArray = explode ("/",$referer);
+    $isContent = array_search("content", $refererArray);
+    if ($isContent !== false) {
+        if (isset($refererArray[$isContent+1])) {
+        $url = $_SERVER['REQUEST_URI'];
+        $newUrl = parse_url($url, PHP_URL_PATH) . "?quiz=" . $refererArray[$isContent+1];
+        drupal_add_js("window.location.replace('". $newUrl ."');", 'inline');
+        }
+    }
+
     drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('#content').hide().fadeIn(300); });    }(jQuery));", 'inline');
     drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('.saasblock-training-index a').click(function(){ $('#content').fadeOut(200); });  });   }(jQuery));", 'inline');
     drupal_add_js("function loadPage(url) { location.href=url; }", 'inline');
-     
+    
+    
     $path = current_path();
     $markup = '';
     $markup .= '<div CLASS="saasblock-training-index">';
 
     if (isset($_GET['quiz'])) {
         $quiz = $_GET['quiz'];
-        $source = "node/" . $quiz;
-        $alias = drupal_lookup_path('alias', $source);
-        $node = $quiz;
-        $nodeInfo = node_load($node);
-        $markup .= "<h2>".$nodeInfo->title."</h2>";
+        $human = ucwords(strtolower(str_replace("-"," ",$quiz))); 
+        $markup .= "<h2>".$human."</h2>";
+        $alias = "content/" . $quiz;
+        $source = drupal_lookup_path('source', $alias);
+        $node = trim($source,"node/");
 
         // TOPICS
         $markup .= "<h3>Topics</h3>";
@@ -539,9 +557,231 @@ function saas_blocks_block_view($block_name = '') {
 			$training_index = saas_blocks_training_index();
 			$block['content'] = $training_index;
 			return $block;
+        case 'user_import':
+			$block['subject'] = t('User Import Block');
+			$user_import = saas_blocks_user_import();
+			$block['content'] = $user_import;
+			return $block;
   }
 
   
 }
 
 
+/**
+ * Import users from uploaded CSV and IMAGES 
+ * 
+ * @return 
+ *   Profile Info array
+ */
+function saas_blocks_user_import(){
+    $markup = "";
+    
+    $uploadDIR = "/var/www/html/upload/server/php/files";
+    $thumbsDIR = $uploadDIR . "/thumbnail";
+    
+    // CSV FILE
+    $csv = $uploadDIR . '/import.csv';
+
+    // READ IN CSV DATA
+    $data = Array();
+    $row = 0;
+    if (file_exists($csv)) {
+        if (($handle = fopen($csv, "r")) !== FALSE) {
+            while (($data[$row] = fgetcsv($handle, 5000, ',', '"')) !== FALSE) {
+                $row++;
+            }
+            fclose($handle);
+            // remove CSV once done.
+            unlink($csv);
+        }
+    } else {
+        $markup .= "<b>import.csv</b> Not Found<br>";
+        $markup .= "&nbsp;&nbsp;netid,name,status,group,office,position,location,phone,about,dob<br>";
+    }
+    
+
+    // LOOP THROUGH CSV RECORDS
+    foreach($data as $user) {
+        $num = count($user);
+        // THERE SHOULD BY 10 ITEMS
+        if ($num == 10) {
+            $netID      = preg_replace('/[^a-z0-9]/','',strtolower($user[0]));
+            $name       = preg_replace('/[^a-zA-Z ]/','',$user[1]);
+            $status     = intval($user[2]);
+            $group      = intval($user[3]);
+            $office     = intval($user[4]);
+            $position   = intval($user[5]);
+            $location   = substr(preg_replace('/[^a-zA-Z0-9 -]/','',$user[6]), 0, 100);
+            $phone      = substr(preg_replace('/[^0-9-]/','',$user[7]), 0, 6);
+            $about      = substr(preg_replace('/[^a-zA-Z0-9 ,.-]/',' ',$user[8]), 0, 500);
+            $dob        = date_parse($user[9]);
+            if ($dob === false) {
+                $birthday = "1970-01-01";
+            } else {
+                $birthday = date('Y-m-d', mktime(0,0,0,$dob['month'],$dob['day'],$dob['year']));
+            }
+            $timezone = "America/Denver";
+            
+            $markup .= "Working on $netID...<br>";
+
+    /* ---------------------------------------- CREATE USER ---------------------------------------- */        
+            // FIND UID - if this returns FALSE, create the user. 
+            $uid = db_query("SELECT uid FROM users WHERE name = :name limit 1", array(":name" => $netID))->fetchField();
+            if ($uid === false) {
+                $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                $ranPass = '';
+                for ($i = 0; $i < 10; $i++) { $ranPass .= $chars[rand(0, strlen($chars) - 1)]; }
+           
+                $newUser = array(
+                  'name' => $netID,
+                  'pass' => $ranPass,   // use random password - users actually use CAS auth
+                  'mail' => $netID. '@byu.edu',  // this will also be over written when 
+                  'status' => $status,          // status 1=>ACTIVE, 0=>BLOCKED 
+                  'timezone' => $timezone,
+                  'init' => $netID
+                );
+                
+                $newData = user_save(null, $newUser);
+                $uid = $newData->uid;
+                $markup .= "&nbsp;&nbsp;CREATED $netID...<br>";
+                
+    /* ---------------------------------------- UPDATE STATUS ---------------------------------------- */        
+            } else {
+                $result = db_query("UPDATE users SET status = :status, timezone = :timezone WHERE uid = :uid", array(":status" => $status,":timezone" => $timezone,":uid" => $uid,));
+                $markup .= "&nbsp;&nbsp;UPDATED $netID...<br>";
+            }
+
+    /* ---------------------------------------- field array ---------------------------------------- */        
+            // ARRAY of standard field_data_table_values
+            $field_data = array();
+            $field_data['entity_type'] = 'user';
+            $field_data['bundle'] = 'user';
+            $field_data['deleted'] = 0;
+            $field_data['entity_id'] = $uid;
+            $field_data['revision_id'] = $uid;
+            $field_data['language'] = 'und';
+            $field_data['delta'] = 0;
+
+    /* ---------------------------------------- CAS USER ---------------------------------------- */        
+            // CAS user
+            $cas_name = db_query("SELECT cas_name FROM cas_user WHERE uid = :uid limit 1", array(":uid" => $uid))->fetchField();
+            if ($cas_name === false) {
+                $field = array();
+                $field["uid"] = $uid;
+                $field["cas_name"] = $netID;
+                $result = db_insert('cas_user')->fields($field)->execute(); 
+                $markup .= "&nbsp;&nbsp;ADDED CAS $netID...<br>";
+            }
+
+    /* ---------------------------------------- NAME ---------------------------------------- */        
+            // field_data_field_user_office
+            $result = db_query("DELETE FROM field_data_field_name WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_name_value'] = $name;
+            $result = db_insert('field_data_field_name')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED NAME $netID - $netID.<br>";
+     
+    /* ---------------------------------------- OFFICE ---------------------------------------- */        
+            // field_data_field_user_office
+            $result = db_query("DELETE FROM field_data_field_user_office WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_user_office_tid'] = $office;
+            $result = db_insert('field_data_field_user_office')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED OFFICE $netID - $office.<br>";
+
+    /* ---------------------------------------- POSITION ---------------------------------------- */        
+            // field_data_field_position
+            $result = db_query("DELETE FROM field_data_field_position WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_position_target_id'] = $position;
+            $result = db_insert('field_data_field_position')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED POSITION $netID - $position.<br>";
+
+    /* ---------------------------------------- LOCATION ---------------------------------------- */    
+            // field_data_field_office_location
+            $result = db_query("DELETE FROM field_data_field_office_location WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_office_location_value'] = $location;
+            $result = db_insert('field_data_field_office_location')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED LOCATION $netID - $location.<br>";
+
+    /* ---------------------------------------- PHONE ---------------------------------------- */  
+            // field_data_field_office_phone
+            $result = db_query("DELETE FROM field_data_field_office_phone WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_office_phone_value'] = $phone;
+            $result = db_insert('field_data_field_office_phone')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED PHONE $netID - $phone.<br>";
+
+    /* ---------------------------------------- ABOUT ---------------------------------------- */ 
+            // field_data_field_user_about
+            $result = db_query("DELETE FROM field_data_field_user_about WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_user_about_value'] = $about;
+            $result = db_insert('field_data_field_user_about')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED ABOUT $netID - $about.<br>";
+
+    /* ---------------------------------------- BIRTHDAY ---------------------------------------- */
+            // field_data_field_user_birthday
+            $result = db_query("DELETE FROM field_data_field_user_birthday WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $field = array();
+            $field = $field_data;
+            $field['field_user_birthday_value'] = $birthday;
+            $result = db_insert('field_data_field_user_birthday')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED BIRTHDAY $netID - $birthday.<br>";
+
+    /* ---------------------------------------- PHOTO ---------------------------------------- */
+            $picFilename = $uploadDIR . "/" . $netID . ".jpg";
+            $thumbFilename = $thumbsDIR . "/" . $netID . ".jpg";
+            if (file_exists($picFilename)) {
+                $img = file_get_contents($picFilename);
+                $newFilename = "picture-" . $uid . "-" . time() . ".jpg";
+                $newPath = "private://pictures/" . $newFilename;
+                $file = file_save_data($img, $newPath);
+                if ($file !== false) {
+                    $result = db_query("DELETE FROM file_usage WHERE (module='user') AND (type='user') AND id = :id", array(":id" => $uid));
+                    $fid = $file->fid;
+                    $field = array();
+                    $field['fid']       = $fid; 
+                    $field['module']    = 'user';
+                    $field['type']      = 'user';
+                    $field['id']        = $uid;
+                    $field['count']     = 1;
+                    $result = db_insert('file_usage')->fields($field)->execute();
+                    $result = db_query("UPDATE users SET picture = :fid WHERE uid = :uid", array(":fid" => $fid,":uid" => $uid,));
+                    $markup .= "&nbsp;&nbsp;ADDED PHOTO $netID - $newFilename.<br>";
+                    // remove pictures once they are done
+                    unlink($picFilename);
+                    unlink($thumbFilename);
+                }
+            }        
+            
+    /* ---------------------------------------- GROUP ---------------------------------------- */
+            // rap_standard_assignment
+            $result = db_query("DELETE FROM rap_standard_assignment WHERE (master_type='group') AND (slave_type='user') AND (slave_id=:sid)", array(":sid" => $uid));
+            $field = array();
+            $field['master_type']   = 'group';
+            $field['master_id']     = $group;
+            $field['slave_type']    = 'user';
+            $field['slave_id']      = $uid;
+            $field['revision_date'] = time();
+            $result = db_insert('rap_standard_assignment')->fields($field)->execute();
+            $markup .= "&nbsp;&nbsp;ADDED GROUP $netID - $group.<br>";
+        }
+    }
+
+    $output = array (
+        '#type' => 'markup',
+        '#markup' => $markup,
+    );
+      
+    return $output;   
+
+}
