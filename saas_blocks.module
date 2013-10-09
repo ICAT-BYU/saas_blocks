@@ -352,22 +352,10 @@ function saas_blocks_topic_categories_links(){
  *   List of Nodes to Review + Quiz to take
  */
 function saas_blocks_training_index(){
-    // if FROM TEST PAGE - reload page with quiz in the URL
-    $referer = $_SERVER['HTTP_REFERER'];
-    $refererArray = explode ("/",$referer);
-    $isContent = array_search("content", $refererArray);
-    if ($isContent !== false) {
-        if (isset($refererArray[$isContent+1])) {
-        $url = $_SERVER['REQUEST_URI'];
-        $newUrl = parse_url($url, PHP_URL_PATH) . "?quiz=" . $refererArray[$isContent+1];
-        drupal_add_js("window.location.replace('". $newUrl ."');", 'inline');
-        }
-    }
 
     drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('#content').hide().fadeIn(300); });    }(jQuery));", 'inline');
     drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('.saasblock-training-index a').click(function(){ $('#content').fadeOut(200); });  });   }(jQuery));", 'inline');
     drupal_add_js("function loadPage(url) { location.href=url; }", 'inline');
-    
     
     $path = current_path();
     $markup = '';
@@ -375,12 +363,12 @@ function saas_blocks_training_index(){
 
     if (isset($_GET['quiz'])) {
         $quiz = $_GET['quiz'];
-        $human = ucwords(strtolower(str_replace("-"," ",$quiz))); 
-        $markup .= "<h2>".$human."</h2>";
-        $alias = "content/" . $quiz;
-        $source = drupal_lookup_path('source', $alias);
-        $node = trim($source,"node/");
-
+        $source = "node/" . $quiz;
+        $alias = drupal_lookup_path('alias', $source);
+        $node = $quiz;
+        $nodeInfo = node_load($node);
+        $markup .= "<h2>".$nodeInfo->title."</h2>";
+        
         // TOPICS
         $markup .= "<h3>Topics</h3>";
         $sql = "SELECT n.title, n.nid FROM node n ";
@@ -675,66 +663,80 @@ function saas_blocks_user_import(){
             }
 
     /* ---------------------------------------- NAME ---------------------------------------- */        
-            // field_data_field_user_office
+            // field_data_field_name field_revision_field_name
             $result = db_query("DELETE FROM field_data_field_name WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_name WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_name_value'] = $name;
             $result = db_insert('field_data_field_name')->fields($field)->execute();
+            $result = db_insert('field_revision_field_name')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED NAME $netID - $netID.<br>";
      
     /* ---------------------------------------- OFFICE ---------------------------------------- */        
-            // field_data_field_user_office
+            // field_data_field_user_office field_revision_field_user_office
             $result = db_query("DELETE FROM field_data_field_user_office WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_user_office WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_user_office_tid'] = $office;
             $result = db_insert('field_data_field_user_office')->fields($field)->execute();
+            $result = db_insert('field_revision_field_user_office')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED OFFICE $netID - $office.<br>";
 
     /* ---------------------------------------- POSITION ---------------------------------------- */        
-            // field_data_field_position
+            // field_data_field_position field_revision_field_position
             $result = db_query("DELETE FROM field_data_field_position WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_position WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_position_target_id'] = $position;
             $result = db_insert('field_data_field_position')->fields($field)->execute();
+            $result = db_insert('field_revision_field_position')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED POSITION $netID - $position.<br>";
 
     /* ---------------------------------------- LOCATION ---------------------------------------- */    
-            // field_data_field_office_location
+            // field_data_field_office_location field_revision_field_office_location
             $result = db_query("DELETE FROM field_data_field_office_location WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_office_location WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_office_location_value'] = $location;
             $result = db_insert('field_data_field_office_location')->fields($field)->execute();
+            $result = db_insert('field_revision_field_office_location')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED LOCATION $netID - $location.<br>";
 
     /* ---------------------------------------- PHONE ---------------------------------------- */  
-            // field_data_field_office_phone
+            // field_data_field_office_phone field_revision_field_office_phone
             $result = db_query("DELETE FROM field_data_field_office_phone WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_office_phone WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_office_phone_value'] = $phone;
             $result = db_insert('field_data_field_office_phone')->fields($field)->execute();
+            $result = db_insert('field_revision_field_office_phone')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED PHONE $netID - $phone.<br>";
 
     /* ---------------------------------------- ABOUT ---------------------------------------- */ 
-            // field_data_field_user_about
+            // field_data_field_user_about field_revision_field_user_about
             $result = db_query("DELETE FROM field_data_field_user_about WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_user_about WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_user_about_value'] = $about;
             $result = db_insert('field_data_field_user_about')->fields($field)->execute();
+            $result = db_insert('field_revision_field_user_about')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED ABOUT $netID - $about.<br>";
 
     /* ---------------------------------------- BIRTHDAY ---------------------------------------- */
-            // field_data_field_user_birthday
+            // field_data_field_user_birthday field_revision_field_user_birthday
             $result = db_query("DELETE FROM field_data_field_user_birthday WHERE entity_id = :entity_id", array(":entity_id" => $uid));
+            $result = db_query("DELETE FROM field_revision_field_user_birthday WHERE entity_id = :entity_id", array(":entity_id" => $uid));
             $field = array();
             $field = $field_data;
             $field['field_user_birthday_value'] = $birthday;
             $result = db_insert('field_data_field_user_birthday')->fields($field)->execute();
+            $result = db_insert('field_revision_field_user_birthday')->fields($field)->execute();
             $markup .= "&nbsp;&nbsp;ADDED BIRTHDAY $netID - $birthday.<br>";
 
     /* ---------------------------------------- PHOTO ---------------------------------------- */
