@@ -556,6 +556,12 @@ function saas_blocks_block_view($block_name = '') {
 }
 
 
+/* *********************************************************************************************************************************************** **
+
+                                                            USER IMPORT BLOCK
+
+** *********************************************************************************************************************************************** */
+
 /**
  * Import users from uploaded CSV and IMAGES 
  * 
@@ -592,10 +598,12 @@ function saas_blocks_user_import(){
     $master = $uploadDIR . '/master-' .date("Y.m.d-H.i.s"). '.csv';
 
     // READ IN CSV DATA
+    $headers = Array();
     $data = Array();
     $row = 0;
     if (file_exists($csv)) {
         if (($handle = fopen($csv, "r")) !== FALSE) {
+            $headers = fgetcsv($handle, 5000, ',', '"');
             while (($data[$row] = fgetcsv($handle, 5000, ',', '"')) !== FALSE) {
                 $row++;
             }
@@ -615,7 +623,6 @@ function saas_blocks_user_import(){
             foreach($offArray as $key => $value) {$markup .= "<tr><td>$value</td><td>$key</td></tr>";} $markup .= "</table>";
         $markup .= "<table><tr><th colspan=2 style='background-color:#444;'>POSITION VALUES</th></tr>";
             foreach($posArray as $key => $value) {$markup .= "<tr><td>$value</td><td>$key</td></tr>";} $markup .= "</table>";
- 
     }
 
     // LOOP THROUGH CSV RECORDS
@@ -631,7 +638,7 @@ function saas_blocks_user_import(){
             $position   = intval(trim($user[5]));
             $location   = substr(preg_replace('/[^a-zA-Z0-9 -]/','',trim($user[6])), 0, 100);
             $phone      = substr(preg_replace('/[^0-9-]/','',trim($user[7])), 0, 6);
-            $about      = substr(preg_replace('/[^a-zA-Z0-9 ,.-]/',' ',trim($user[8])), 0, 500);
+            $about      = substr(preg_replace('/[^a-zA-Z0-9 <>!,.-]/',' ',trim($user[8])), 0, 500);
             $dob        = date_parse(trim($user[9]));
             if ($dob === false) {
                 $birthday = "1970-01-01";
@@ -649,6 +656,7 @@ function saas_blocks_user_import(){
             if (!isset($grpArray[$group]))      {$errors++; $markup .= "&nbsp;&nbsp;ERROR: -$group- is not a valid group<br>";}
             if (!isset($offArray[$office]))     {$errors++; $markup .= "&nbsp;&nbsp;ERROR: -$office- is not a valid office<br>";}
             if (!isset($posArray[$position]))   {$errors++; $markup .= "&nbsp;&nbsp;ERROR: -$position- is not a valid position<br>";}
+            //$markup .= $netID.",".$name.",".$status.",".$group.",".$office.",".$position.",".$location.",".$phone.",".$about.",".$birthday."<br>";
             
             if ($errors == 0) {
                 /* ---------------------------------------- CREATE USER ---------------------------------------- */        
@@ -805,7 +813,8 @@ function saas_blocks_user_import(){
                         
                 /* ---------------------------------------- GROUP ---------------------------------------- */
                         // rap_standard_assignment
-                        $result = db_query("DELETE FROM rap_standard_assignment WHERE (master_type='group') AND (slave_type='user') AND (slave_id=:sid)", array(":sid" => $uid));
+                        $back10 = time()-10;
+                        $result = db_query("DELETE FROM rap_standard_assignment WHERE (master_type='group') AND (slave_type='user') AND (slave_id=:sid) AND (revision_date < :b10)", array(":sid" => $uid, ":b10" => $back10));
                         $field = array();
                         $field['master_type']   = 'group';
                         $field['master_id']     = $group;
@@ -818,16 +827,15 @@ function saas_blocks_user_import(){
         }
     }
 
-    // CREATE MASTER.CSV
-    $allUSERS = db_query("SELECT uid, name, status FROM users WHERE uid > 0 ORDER BY status, name");
+    // CREATE MASTER.CSV (only CAS users)
+    $allUSERS = db_query("SELECT uid, name, status FROM users WHERE uid in (SELECT uid FROM cas_user) ORDER BY status, name");
     file_put_contents($master,"netid,name,status,group,office,position,location,phone,about,dob\n",FILE_APPEND);
     foreach($allUSERS as $user) {
-        $str = "";
+        
         $uid        = $user->uid;
         $netID      = $user->name;
         $status     = $user->status;
         $name       = db_query("SELECT field_name_value                 FROM field_data_field_name              WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
-        $group      = db_query("SELECT master_id                        FROM rap_standard_assignment            WHERE (master_type='group') AND (slave_type='user') AND (slave_id=:sid) limit 1", array(":sid" => $uid))->fetchField();
         $office     = db_query("SELECT field_user_office_tid            FROM field_data_field_user_office       WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
         $position   = db_query("SELECT field_position_target_id         FROM field_data_field_position          WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
         $location   = db_query("SELECT field_office_location_value      FROM field_data_field_office_location   WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
@@ -835,19 +843,22 @@ function saas_blocks_user_import(){
         $about      = db_query("SELECT field_user_about_value           FROM field_data_field_user_about        WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
         $dob        = db_query("SELECT field_user_birthday_value        FROM field_data_field_user_birthday     WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
 
-        $str .= '"' .  str_replace('"','',trim($netID)) . '",';
-        $str .= '"' .  str_replace('"','',trim($name)) . '",';
-        $str .= $status . ",";
-        $str .= $group . ",";
-        $str .= $office . ",";
-        $str .= $position . ",";
-        $str .= '"' . str_replace('"','',trim($location)) . '",';
-        $str .= '" ' . str_replace('"','',trim($phone)) . '",';
-        $str .= '"' . str_replace('"','',trim($about)) . '",';
-        $str .= date("Y/m/d",strtotime($dob)) . "\n";
-
-        file_put_contents($master,$str,FILE_APPEND);
-     }
+        $myGroups   = db_query("SELECT master_id, slave_id,revision_date FROM rap_standard_assignment WHERE (master_type='group') AND (slave_type='user') AND (slave_id=:sid)", array(":sid" => $uid));
+        foreach($myGroups as $group) {
+            $str = "";
+            $str .= '"' .  str_replace('"','',trim($netID)) . '",';
+            $str .= '"' .  str_replace('"','',trim($name)) . '",';
+            $str .= $status . ",";
+            $str .= $group->master_id . ",";
+            $str .= $office . ",";
+            $str .= $position . ",";
+            $str .= '"' . str_replace('"','',trim($location)) . '",';
+            $str .= '" ' . str_replace('"','',trim($phone)) . '",';
+            $str .= '"' . str_replace('"','',trim($about)) . '",';
+            $str .= date("Y/m/d",strtotime($dob)) . "\n";
+            file_put_contents($master,$str,FILE_APPEND);
+        }
+    }
 
     $output = array (
         '#type' => 'markup',
