@@ -307,7 +307,8 @@ function saas_blocks_topic_categories_links(){
     // Get the current View
     $path = current_path();
     $pageArray = explode ("/",$path);
-    $view = views_get_view_result("topics_category","default",$pageArray[1]);
+    $view = views_get_view_result("topics_category","page",$pageArray[1]);
+    kpr($view);
     $taxTerms = Array();
     foreach($view as $nodeInfo) {
         $node = node_load($nodeInfo->nid);
@@ -325,7 +326,7 @@ function saas_blocks_topic_categories_links(){
     }
     // Get a Unique, Sorted list of Taxonomy Terms 
     $Taxonomy = array_unique($taxTerms);
-    sort($Taxonomy);
+    //sort($Taxonomy);
     
 	$links = '<ul class="topics-navigation">';
     foreach($Taxonomy as $item) {
