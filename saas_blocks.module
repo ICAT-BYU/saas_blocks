@@ -308,7 +308,6 @@ function saas_blocks_topic_categories_links(){
     $path = current_path();
     $pageArray = explode ("/",$path);
     $view = views_get_view_result("topics_category","page",$pageArray[1]);
-    kpr($view);
     $taxTerms = Array();
     foreach($view as $nodeInfo) {
         $node = node_load($nodeInfo->nid);
