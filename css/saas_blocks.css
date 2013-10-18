@@ -132,10 +132,11 @@
 .icat_power_block {
   width:inherit;
   text-align:center;
+  line-height:0.5em;
 }
 
 .icat_power_block img{
-  margin:20px;
+  margin:10px;
 }
 .icat_power {
   font-style:italic;
