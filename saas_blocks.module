@@ -227,6 +227,8 @@ function saas_blocks_node_permissions(){
         $content = $node->field_ac_content['und'];
         foreach($content as $temp){
             $tmpnode = node_load($temp['target_id']);
+            $modified = date("d-M-Y",$tmpnode->changed);
+            
             if(node_access('view', $tmpnode)){
                 
                 if (isset($temp['entity']->field_display_title['und'][0]['safe_value'])) { 
@@ -273,8 +275,13 @@ function saas_blocks_node_permissions(){
 
                     $tmp .= "</div>";
                     if ($tmpCnt > 0) {$links .= $tmp;} 
+                } else {
+                    $tmp = "<div class='tooltip'><b>". $nodeTitle . '</b><br>'; 
+                    $tmp .= "<div class='node-modified'>".$modified."</div>";
+                    $tmp .= "</div>";
+                    $links .= $tmp;
                 }
-             }
+            }
         }
     }
 	$links .= '</ul></div>';
