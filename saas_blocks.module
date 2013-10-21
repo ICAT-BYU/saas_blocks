@@ -272,7 +272,7 @@ function saas_blocks_node_permissions(){
                         if($line->permission_type == "delete") $pd = 1;
                     }
                     if(($pv+$pu+$pd) > 0) { $tmp .= ".&nbsp;<i>" . $crnt . " - " . ($pv?"v":"") . ($pu?"u":"") .($pd?"d":"") . "</i></br>"; $tmpCnt++; }
-
+                    $tmp .= "<div class='node-modified'>".$modified."</div>";
                     $tmp .= "</div>";
                     if ($tmpCnt > 0) {$links .= $tmp;} 
                 } else {
