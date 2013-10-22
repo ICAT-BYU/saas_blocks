@@ -901,7 +901,7 @@ function saas_blocks_user_import(){
 
     // CREATE MASTER.CSV (only CAS users)
     $allUSERS = db_query("SELECT uid, name, status FROM users WHERE uid in (SELECT uid FROM cas_user) ORDER BY status, name");
-    file_put_contents($master,"netid,name,status,group,office,position,location,phone,about,dob\n",FILE_APPEND);
+    file_put_contents($master,"netid,name,status,employment,group,office,position,location,phone,about,dob\n",FILE_APPEND);
     foreach($allUSERS as $user) {
  
         $uid        = $user->uid;
