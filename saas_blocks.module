@@ -350,6 +350,11 @@ function saas_blocks_related_content() {
                 } else {
                     $nodeTitle = $tmpnode->title;
                 }
+                // shorten title
+                if (strlen($nodeTitle) > 24) {
+                    $nodeTitle = substr($nodeTitle,0,24) . "...";
+                }
+                
                 // IMAGE
                 if(isset($tmpnode->field_image)){
                     $nodeURI = $tmpnode->field_image['und'][0]['uri'];
