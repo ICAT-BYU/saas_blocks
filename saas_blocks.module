@@ -3,8 +3,6 @@
  * @file
  * Block Module to display a breadcrumb as a page title.
  */
-
-
  
  /**
  * Implements hook_help.
@@ -24,59 +22,95 @@ function saas_blocks_help($path, $arg) {
   }
 } 
 
-
-
 /**
  * Implements hook_block_info().
  */
 function saas_blocks_block_info() {
     $blocks['traincrumbs'] = array(
-        // The name that will appear in the block list.
         'info' => t('Traincrumbs'),
-        // Default setting.
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
     $blocks['topic_category_nav'] = array(
-        //The name that will appear in the block list.
         'info' => t('Topic Category Page Navigation'),
-        // Will change for each topic category page
         'cache' => DRUPAL_CACHE_PER_PAGE,
     );
     $blocks['node_permissions'] = array(
-        //The name that will appear in the block list.
         'info' => t('Topic Page Navigation with Node Permissions'),
-        // Will change for each topic category page
         'cache' => DRUPAL_CACHE_PER_PAGE,
     );
     $blocks['icat_power'] = array(
-        //The name that will appear in the block list.
         'info' => t('Powered By ICAT'),
-        // Will change for each topic category page
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
     $blocks['user_profile_info'] = array(
-        //The name that will appear in the block list.
         'info' => t('Users Profile Information'),
-        // Will change for each topic category page
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
     $blocks['training_module_index'] = array(
-        //The name that will appear in the block list.
         'info' => t('Training Module Index'),
-        // Will change for each topic category page
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    $blocks['related_content_list'] = array(
+        'info' => t('Related Content List'),
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
     $blocks['user_import'] = array(
-        //The name that will appear in the block list.
         'info' => t('User Import Block'),
-        // Will change for each topic category page
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
-
     return $blocks;
 }
 
-
+/**
+ * Implements hook_block_view().
+ * 
+ * Prepares the contents of the block.
+ */
+function saas_blocks_block_view($block_name = '') {
+	switch ($block_name) {
+		case 'traincrumbs':
+			$block['subject'] = t('Traincrumbs');
+			$traincrumbs = saas_blocks_traincrumbs();
+			$block['content'] = $traincrumbs;  
+			return $block;
+        case 'topic_category_nav':
+			$block['subject'] = t('Topic Category Page Navigation');
+			$topic_categories_links = saas_blocks_topic_categories_links();
+			$block['content'] = $topic_categories_links;
+			return $block;
+		case 'node_permissions':
+			$block['subject'] = t('Topic Page Navigation with Node Permissions');
+			$node_permissions = saas_blocks_node_permissions();
+			$block['content'] = $node_permissions;
+			return $block;
+        case 'icat_power':
+			$block['subject'] = t('Powered by ICAT');
+			$icat_power = saas_blocks_icat_power();
+			$block['content'] = $icat_power;
+			return $block;
+        case 'user_profile_info':
+			$block['subject'] = t('Users Profile Information');
+			$profile_info = saas_blocks_profile_info();
+			$block['content'] = $profile_info;
+			return $block;
+        case 'training_module_index':
+			$block['subject'] = t('Training Module Index');
+			$training_index = saas_blocks_training_index();
+			$block['content'] = $training_index;
+			return $block;
+        case 'user_import':
+			$block['subject'] = t('User Import Block');
+			$user_import = saas_blocks_user_import();
+			$block['content'] = $user_import;
+			return $block;
+        case 'related_content_list':
+			$block['subject'] = t('Related Content List');
+			$related_content = saas_blocks_related_content();
+			$block['content'] = $related_content;
+			return $block;
+    }
+}
+    
 
 /**
  * Custom content function. 
@@ -84,7 +118,7 @@ function saas_blocks_block_info() {
  * @return 
  *   training breadcrumb output array
  */
-function saas_blocks_contents(){
+function saas_blocks_traincrumbs(){
 	// parse URL elements
 	$urlArray = parse_url($_SERVER['REQUEST_URI']);
 
@@ -95,6 +129,7 @@ function saas_blocks_contents(){
 	if (isset($pageArray[0])) { $curType = $pageArray[0]; } else { $curType = ""; }
 	if (isset($pageArray[1])) { $curPage = $pageArray[1]; } else { $curPage = ""; }
 
+    drupal_add_css(drupal_get_path('module', 'traincrumbs') . '/css/traincrumbs.css');
 	// Array of machine => human readable page names
 	$curPageArray = array(
 		"admissions" => "Admissions",
@@ -128,7 +163,6 @@ function saas_blocks_contents(){
 
 	);
 
-
 	// set human readable variables from machine readable content contained in the url
 	$curPageMachine = $curPage;
 	$curPageHuman = "";
@@ -161,7 +195,7 @@ function saas_blocks_contents(){
 
 		case "tools": break;
 
-    case "topics-category": 
+        case "topics-category": 
 			$viewCat = '<a href="/topics-category/'.$curPage.'" class="filteroptions selected" title"Category">Category</a>';
 			$viewTtl = '<a href="/topics-title/'.$curPage.'" class="filteroptions" title"Alphabetical">A-Z</a>';
 			break;
@@ -275,15 +309,11 @@ function saas_blocks_node_permissions(){
                     $tmp .= "<div class='node-modified'>".$modified."</div>";
                     $tmp .= "</div>";
                     if ($tmpCnt > 0) {$links .= $tmp;} 
-                } else {
-                    $tmp = "<div class='tooltip'><b>". $nodeTitle . '</b><br>'; 
-                    $tmp .= "<div class='node-modified'>".$modified."</div>";
-                    $tmp .= "</div>";
-                    $links .= $tmp;
-                }
+                } 
             }
         }
     }
+    
 	$links .= '</ul></div>';
 	$output = array (
 		'#type' => 'markup',
@@ -294,6 +324,73 @@ function saas_blocks_node_permissions(){
 
 	return $output;
     
+}
+
+function saas_blocks_related_content() {
+    $path = current_path();
+    $pageArray = explode ("/",$path);
+    $node = node_load($pageArray[1]);
+    $links = '<div class="related-content-block"><ul class="rc-list">';
+
+    $module_path = drupal_get_path('module', 'saas_blocks');
+    $imgFile = '<img class="rc-icon" src="/' . $module_path . '/images/file.png" height="12" width="12">';
+    $imgVideo = '<img class="rc-icon" src="/' . $module_path . '/images/video.png" height="12" width="12">';
+    $imgTopic = '<img class="rc-icon" src="/' . $module_path . '/images/topic.png" height="12" width="12">';
+    $imgImage = '<img class="rc-icon" src="/' . $module_path . '/images/image.png" height="12" width="12">';
+    
+    if(!empty($node->field_related_content)){
+        $content = $node->field_related_content['und'];
+        foreach($content as $temp){
+            $tmpnode = node_load($temp['target_id']);
+            
+            if(node_access('view', $tmpnode)) {
+                // Get Note Title
+                if (isset($tmpnode->field_display_title['und'][0]['safe_value'])) { 
+                    $nodeTitle = $tmpnode->field_display_title['und'][0]['safe_value']; 
+                } else {
+                    $nodeTitle = $tmpnode->title;
+                }
+                // IMAGE
+                if(isset($tmpnode->field_image)){
+                    $nodeURI = $tmpnode->field_image['und'][0]['uri'];
+                    $nodeURL = file_create_url($nodeURI);
+                    $links .= "<li><a href='" .$nodeURL. "' rel='shadowbox'>" .$imgImage.$nodeTitle. "</a></li>";
+                }
+                // VIDEO
+                if(isset($tmpnode->field_youtube_video)){
+                    $nodeYTID = $tmpnode->field_youtube_video['und'][0]['video_id'];
+                    $links .= "<li><a href='https://www.youtube.com/v/" .$nodeYTID. "' rel='shadowbox;width=800;height=600;'>" .$imgVideo.$nodeTitle. "</a></li>";
+                }
+                // FILE
+                if(isset($tmpnode->field_file)){
+                    $nodeURI = $tmpnode->field_file['und'][0]['uri'];
+                    $nodeURL = file_create_url($nodeURI);
+                    $links .= "<li><a href='" .$nodeURL. "' target='_blank'>" .$imgFile.$nodeTitle. "</a></li>";
+                }
+                // TOPIC PAGE
+                if(isset($tmpnode->field_ac_content)){
+                    $nodeID = $tmpnode->nid;
+                    $nodeURL = "node/" . $nodeID;
+                    $nodeAlias = drupal_lookup_path("alias", $nodeURL);
+                    if ($nodeAlias === false) {
+                        $links .= "<li><a href='/" .$nodeURL. "'>" .$imgTopic.$nodeTitle. "</a></li>";
+                    } else {
+                        $links .= "<li><a href='/" .$nodeAlias. "'>" .$imgTopic.$nodeTitle. "</a></li>";
+                    }
+                    
+                }
+            }
+        }
+    }    
+   
+    $links .= '</ul></div>';
+	$output = array (
+		'#type' => 'markup',
+		'#prefix' => '',
+		'#markup' => $links,
+		'#suffix' => '',
+		);
+	return $output;
 }
 
 /**
@@ -509,57 +606,6 @@ function saas_blocks_profile_info(){
     );
       
     return $output;
-}
-
-
-
-/**
- * Implements hook_block_view().
- * 
- * Prepares the contents of the block.
- */
-function saas_blocks_block_view($block_name = '') {
-
-	drupal_add_css(drupal_get_path('module', 'traincrumbs') . '/css/traincrumbs.css');
-	switch ($block_name) {
-		case 'traincrumbs':
-			$block['subject'] = t('Traincrumbs');
-			$traincrumbs = saas_blocks_contents();
-			$block['content'] = $traincrumbs;  
-			return $block;
-        case 'topic_category_nav':
-			$block['subject'] = t('Topic Category Page Navigation');
-			$topic_categories_links = saas_blocks_topic_categories_links();
-			$block['content'] = $topic_categories_links;
-			return $block;
-		case 'node_permissions':
-			$block['subject'] = t('Topic Page Navigation with Node Permissions');
-			$node_permissions = saas_blocks_node_permissions();
-			$block['content'] = $node_permissions;
-			return $block;
-        case 'icat_power':
-			$block['subject'] = t('Powered by ICAT');
-			$icat_power = saas_blocks_icat_power();
-			$block['content'] = $icat_power;
-			return $block;
-        case 'user_profile_info':
-			$block['subject'] = t('Users Profile Information');
-			$profile_info = saas_blocks_profile_info();
-			$block['content'] = $profile_info;
-			return $block;
-        case 'training_module_index':
-			$block['subject'] = t('Training Module Index');
-			$training_index = saas_blocks_training_index();
-			$block['content'] = $training_index;
-			return $block;
-        case 'user_import':
-			$block['subject'] = t('User Import Block');
-			$user_import = saas_blocks_user_import();
-			$block['content'] = $user_import;
-			return $block;
-  }
-
-  
 }
 
 
