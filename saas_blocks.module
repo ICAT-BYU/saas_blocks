@@ -253,6 +253,10 @@ function saas_blocks_node_permissions(){
     } else {
         $tooltips = 1;
     }
+    // only show tooltips in EDIT mode
+    if (!isset($_GET["edit"])) {
+        $tooltips = 0;
+    }
     $path = current_path();
     $pageArray = explode ("/",$path);
     $node = node_load($pageArray[1]);
@@ -351,26 +355,27 @@ function saas_blocks_related_content() {
                     $nodeTitle = $tmpnode->title;
                 }
                 // shorten title
-                if (strlen($nodeTitle) > 24) {
-                    $nodeTitle = substr($nodeTitle,0,24) . "...";
+                $nodeFullTitle = $nodeTitle;
+                if (strlen($nodeTitle) > 20) {
+                    $nodeTitle = substr($nodeTitle,0,18) . "...";
                 }
                 
                 // IMAGE
                 if(isset($tmpnode->field_image)){
                     $nodeURI = $tmpnode->field_image['und'][0]['uri'];
                     $nodeURL = file_create_url($nodeURI);
-                    $links .= "<li><a href='" .$nodeURL. "' rel='shadowbox'>" .$imgImage.$nodeTitle. "</a></li>";
+                    $links .= "<li><a href='" .$nodeURL. "' rel='shadowbox' title='".$nodeFullTitle."'>" .$imgImage.$nodeTitle. "</a></li>";
                 }
                 // VIDEO
                 if(isset($tmpnode->field_youtube_video)){
                     $nodeYTID = $tmpnode->field_youtube_video['und'][0]['video_id'];
-                    $links .= "<li><a href='https://www.youtube.com/v/" .$nodeYTID. "' rel='shadowbox;width=800;height=600;'>" .$imgVideo.$nodeTitle. "</a></li>";
+                    $links .= "<li><a href='https://www.youtube.com/v/" .$nodeYTID. "' rel='shadowbox;width=800;height=600;' title='".$nodeFullTitle."'>" .$imgVideo.$nodeTitle. "</a></li>";
                 }
                 // FILE
                 if(isset($tmpnode->field_file)){
                     $nodeURI = $tmpnode->field_file['und'][0]['uri'];
                     $nodeURL = file_create_url($nodeURI);
-                    $links .= "<li><a href='" .$nodeURL. "' target='_blank'>" .$imgFile.$nodeTitle. "</a></li>";
+                    $links .= "<li><a href='" .$nodeURL. "' target='_blank' title='".$nodeFullTitle."'>" .$imgFile.$nodeTitle. "</a></li>";
                 }
                 // TOPIC PAGE
                 if(isset($tmpnode->field_ac_content)){
@@ -378,9 +383,9 @@ function saas_blocks_related_content() {
                     $nodeURL = "node/" . $nodeID;
                     $nodeAlias = drupal_lookup_path("alias", $nodeURL);
                     if ($nodeAlias === false) {
-                        $links .= "<li><a href='/" .$nodeURL. "'>" .$imgTopic.$nodeTitle. "</a></li>";
+                        $links .= "<li><a href='/" .$nodeURL. "' title='".$nodeFullTitle."'>" .$imgTopic.$nodeTitle. "</a></li>";
                     } else {
-                        $links .= "<li><a href='/" .$nodeAlias. "'>" .$imgTopic.$nodeTitle. "</a></li>";
+                        $links .= "<li><a href='/" .$nodeAlias. "' title='".$nodeFullTitle."'>" .$imgTopic.$nodeTitle. "</a></li>";
                     }
                     
                 }
