@@ -127,11 +127,12 @@ function saas_blocks_traincrumbs(){
 
 	// get the current page and current type from the url
 	if (isset($pageArray[0])) { $curType = $pageArray[0]; } else { $curType = ""; }
-	if (isset($pageArray[1])) { $curPage = $pageArray[1]; } else { $curPage = ""; }
-
+	if (isset($pageArray[1])) { $curPage = $pageArray[1]; } else { $curPage = "saas"; }
+    
     drupal_add_css(drupal_get_path('module', 'traincrumbs') . '/css/traincrumbs.css');
 	// Array of machine => human readable page names
 	$curPageArray = array(
+		"saas" => "SAAS",
 		"admissions" => "Admissions",
 		"financial_aid" => "Financial Aid",
 		"financial-aid" => "Financial Aid",
@@ -155,8 +156,10 @@ function saas_blocks_traincrumbs(){
 
 	// Array of page types
 	$curTypeArray = array(
+		"directory" => "Directory",
 		"news" => "News",
 		"positions" => "Positions",
+		"position" => "Position",
 		"tools" => "Tools",
 		"topics_category" => "topics_category",
 		"topics_title" => "topics_title",
@@ -177,6 +180,24 @@ function saas_blocks_traincrumbs(){
 
 			$curTypeMachine = $curType;
 			$curTypeHuman = "";
+            
+    // Highlight Selected Menu
+    switch ($curPageHuman) {
+        case "Admissions"               : $css = 'li a[href="/topics-category/admissions"] { background-color: #fff; }'; break;
+        case "Financial Aid"            : $css = 'li a[href="/topics-category/financial_aid"] { background-color: #fff; }'; break;
+        case "Registrar"                : $css = 'li a[href="/topics-category/registrar"] { background-color: #fff; }'; break;
+        // onestop
+        case "Counseling"               : $css = 'li a[href="https:#"] { background-color: #fff; }'; break;
+        case "Processing"               : $css = 'li a[href="https:#"] { background-color: #fff; }'; break;
+        case "Student Services"         : $css = 'li a[href="https:#"] { background-color: #fff; }'; break;
+        // other
+        case "Executive Director"       : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
+        case "Financial Services"       : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
+        case "ICAT"                     : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
+        case "Technology Applications"  : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
+        case "Treasury Services"        : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
+    }
+    if (isset($css)) {drupal_add_css($css, 'inline');}
 			
   if (isset($curTypeArray[$curType])) { $curTypeHuman = $curTypeArray[$curType]; }
 	switch($curType) {
@@ -191,9 +212,13 @@ function saas_blocks_traincrumbs(){
 				default: $subCat = "";
 			}
 			break;
+		case "directory": $subCat = $curTypeHuman; break;
+        
 		case "positions": $subCat = $curTypeHuman; break;
+        
+		case "position": $subCat = $curTypeHuman . " . " . drupal_get_title();; break;
 
-		case "tools": break;
+		case "tools": $subCat = $curTypeHuman; break;
 
         case "topics-category": 
 			$viewCat = '<a href="/topics-category/'.$curPage.'" class="filteroptions selected" title"Category">Category</a>';
@@ -205,11 +230,10 @@ function saas_blocks_traincrumbs(){
 			$viewTtl = '<a href="/topics-title/'.$curPage.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
 			break;
 		case "topics":
-			$pageTitle = drupal_get_title();;
+			$pageTitle = drupal_get_title();
 			break;
 
 	}
-
 
 	$outPre = '<div class="clearfloats"></div><div id="curSection" class="' .  $curPageClass . '">';
 	$outBody =  $curPageOffice;
