@@ -205,6 +205,13 @@ font-size:0.6em;
   margin-top:0;
   margin-left:10px;
 }
+.related-content-block h3{
+  color:#4D6079;
+  font-size:1.1em;
+  line-height:1.5em;
+  font-weight:bold;
+  margin:0px;
+}
 .rc-icon{
 margin-left:0px;
 margin-right:3px;

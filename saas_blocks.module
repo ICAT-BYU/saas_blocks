@@ -358,8 +358,9 @@ function saas_blocks_related_content() {
     $path = current_path();
     $pageArray = explode ("/",$path);
     $node = node_load($pageArray[1]);
-    $links = '<div class="related-content-block"><ul class="rc-list">';
-
+    $links = '<div class="related-content-block"><h3>Related Content</h3><ul class="rc-list">';
+    $linkCount = 0;
+    
     $module_path = drupal_get_path('module', 'saas_blocks');
     $imgFile = '<img class="rc-icon" src="/' . $module_path . '/images/file.png" height="12" width="12">';
     $imgVideo = '<img class="rc-icon" src="/' . $module_path . '/images/video.png" height="12" width="12">';
@@ -389,17 +390,20 @@ function saas_blocks_related_content() {
                     $nodeURI = $tmpnode->field_image['und'][0]['uri'];
                     $nodeURL = file_create_url($nodeURI);
                     $links .= "<li><a href='" .$nodeURL. "' rel='shadowbox' title='".$nodeFullTitle."'>" .$imgImage.$nodeTitle. "</a></li>";
+                    $linkCount++;
                 }
                 // VIDEO
                 if(isset($tmpnode->field_youtube_video)){
                     $nodeYTID = $tmpnode->field_youtube_video['und'][0]['video_id'];
                     $links .= "<li><a href='https://www.youtube.com/v/" .$nodeYTID. "' rel='shadowbox;width=800;height=600;' title='".$nodeFullTitle."'>" .$imgVideo.$nodeTitle. "</a></li>";
+                    $linkCount++;
                 }
                 // FILE
                 if(isset($tmpnode->field_file)){
                     $nodeURI = $tmpnode->field_file['und'][0]['uri'];
                     $nodeURL = file_create_url($nodeURI);
                     $links .= "<li><a href='" .$nodeURL. "' target='_blank' title='".$nodeFullTitle."'>" .$imgFile.$nodeTitle. "</a></li>";
+                    $linkCount++;
                 }
                 // TOPIC PAGE
                 if(isset($tmpnode->field_ac_content)){
@@ -411,13 +415,16 @@ function saas_blocks_related_content() {
                     } else {
                         $links .= "<li><a href='/" .$nodeAlias. "' title='".$nodeFullTitle."'>" .$imgTopic.$nodeTitle. "</a></li>";
                     }
-                    
+                    $linkCount++;
                 }
             }
         }
     }    
    
     $links .= '</ul></div>';
+    if ($linkCount == 0) {
+        $links = '<div class="related-content-block"></div>';
+    }
 	$output = array (
 		'#type' => 'markup',
 		'#prefix' => '',
