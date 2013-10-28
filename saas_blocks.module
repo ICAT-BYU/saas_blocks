@@ -182,20 +182,23 @@ function saas_blocks_traincrumbs(){
 			$curTypeHuman = "";
             
     // Highlight Selected Menu
+    // first hide the title    
+    $module_path = drupal_get_path('module', 'saas_blocks');
+    drupal_add_js('/' . $module_path . '/js/atitle.js', 'file');
     switch ($curPageHuman) {
-        case "Admissions"               : $css = 'li a[href="/topics-category/admissions"] { background-color: #fff; }'; break;
-        case "Financial Aid"            : $css = 'li a[href="/topics-category/financial_aid"] { background-color: #fff; }'; break;
-        case "Registrar"                : $css = 'li a[href="/topics-category/registrar"] { background-color: #fff; }'; break;
+        case "Admissions"               : $css = 'a[title="Admissions"]      { background-color: #fff; }'; break;
+        case "Financial Aid"            : $css = 'a[title="Financial Aid"]   { background-color: #fff; }'; break;
+        case "Registrar"                : $css = 'a[title="Registrar"]       { background-color: #fff; }'; break;
         // onestop
-        case "Counseling"               : $css = 'li a[href="https:###"] { background-color: #fff; }'; break;
-        case "Processing"               : $css = 'li a[href="https:###"] { background-color: #fff; }'; break;
-        case "Student Services"         : $css = 'li a[href="https:###"] { background-color: #fff; }'; break;
+        case "Counseling"               : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
+        case "Processing"               : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
+        case "Student Services"         : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
         // other
-        case "Executive Director"       : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
-        case "Financial Services"       : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
-        case "ICAT"                     : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
-        case "Technology Applications"  : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
-        case "Treasury Services"        : $css = 'li a[href="https:##"] { background-color: #fff; }'; break;
+        case "Executive Director"       : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
+        case "Financial Services"       : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
+        case "ICAT"                     : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
+        case "Technology Applications"  : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
+        case "Treasury Services"        : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
     }
     if (isset($css)) {drupal_add_css($css, 'inline');}
 			
