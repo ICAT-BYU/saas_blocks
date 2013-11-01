@@ -204,6 +204,12 @@ function saas_blocks_traincrumbs(){
 				default: $extraInfoHuman = "";
 			}
 			break;
+        case "user":
+        case "profile":
+            $netID = $extraInfoHuman;
+            $pName = db_query("SELECT field_name_value FROM field_data_field_name n JOIN cas_user c ON c.uid = n.entity_id WHERE c.cas_name = :netid limit 1", array(":netid" => $netID))->fetchField();
+            if (isset($pName)) {$extraInfoHuman = $pName;}
+            break;
     }
     
     $outPre = '<div class="clearfloats"></div><div id="curSection" class="' .  $thumbClass . '">';
