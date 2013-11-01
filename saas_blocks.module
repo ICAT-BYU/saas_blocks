@@ -186,12 +186,12 @@ function saas_blocks_traincrumbs(){
 
     switch ($pageType) {
         case "topics-category":
-            $viewCat = '<a href="/topics-category/'.$officeType.'" class="filteroptions selected" title"Category">Category</a>';
-            $viewTtl = '<a href="/topics-title/'.$officeType.'" class="filteroptions" title"Alphabetical">A-Z</a>';
+            $viewCat = '<a href="/topics-category/'.str_replace("-","_",$officeType).'" class="filteroptions selected" title"Category">Category</a>';
+            $viewTtl = '<a href="/topics-title/'.str_replace("-","_",$officeType).'" class="filteroptions" title"Alphabetical">A-Z</a>';
             break;
         case "topics-title":
-            $viewCat = '<a href="/topics-category/'.$officeType.'" class="filteroptions" title"Category">Category</a>';
-            $viewTtl = '<a href="/topics-title/'.$officeType.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
+            $viewCat = '<a href="/topics-category/'.str_replace("-","_",$officeType).'" class="filteroptions" title"Category">Category</a>';
+            $viewTtl = '<a href="/topics-title/'.str_replace("-","_",$officeType).'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
             break;
 		case "news":
 			isset($_GET["created"]) ? $created=$_GET["created"] : $created=0;
