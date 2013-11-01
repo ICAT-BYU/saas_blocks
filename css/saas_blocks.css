@@ -13,33 +13,23 @@
   background-color:#203858;
 }
 
-#curSection.financial_aid, 
 #curSection.financial-aid{
   background-color:#B1BC33;
-}
-
-
-#curSection.onestop,
-#curSection.student_services,
-#curSection.processing,
-#curSection.counseling{
-  background-color:#C74832;
 }
 
 #curSection.registrar{
   background-color:#7ED2D4;
 }
 
-#curSection.other{
-  background-color:#5c6338
+#curSection.onestop,
+#curSection.student-services,
+#curSection.processing,
+#curSection.counseling{
+  background-color:#C74832;
 }
 
+#curSection.other,
 #curSection.icat,
-#curSection.executive_director,
-#curSection.technology_applications,
-#curSection.financial_services,
-#curSection.treasury_services,
-#curSection.ICAT,
 #curSection.executive-director,
 #curSection.technology-applications,
 #curSection.financial-services,

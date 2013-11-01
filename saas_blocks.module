@@ -70,43 +70,35 @@ function saas_blocks_block_view($block_name = '') {
 	switch ($block_name) {
 		case 'traincrumbs':
 			$block['subject'] = t('Traincrumbs');
-			$traincrumbs = saas_blocks_traincrumbs();
-			$block['content'] = $traincrumbs;  
+			$block['content'] = saas_blocks_traincrumbs();
 			return $block;
         case 'topic_category_nav':
 			$block['subject'] = t('Topic Category Page Navigation');
-			$topic_categories_links = saas_blocks_topic_categories_links();
-			$block['content'] = $topic_categories_links;
+			$block['content'] = saas_blocks_topic_categories_links();
 			return $block;
 		case 'node_permissions':
 			$block['subject'] = t('Topic Page Navigation with Node Permissions');
-			$node_permissions = saas_blocks_node_permissions();
-			$block['content'] = $node_permissions;
+			$block['content'] = saas_blocks_node_permissions();
 			return $block;
         case 'icat_power':
 			$block['subject'] = t('Powered by ICAT');
-			$icat_power = saas_blocks_icat_power();
-			$block['content'] = $icat_power;
+			$block['content'] = saas_blocks_icat_power();
 			return $block;
         case 'user_profile_info':
 			$block['subject'] = t('Users Profile Information');
-			$profile_info = saas_blocks_profile_info();
-			$block['content'] = $profile_info;
+			$block['content'] = saas_blocks_profile_info();
 			return $block;
         case 'training_module_index':
 			$block['subject'] = t('Training Module Index');
-			$training_index = saas_blocks_training_index();
-			$block['content'] = $training_index;
+			$block['content'] = saas_blocks_training_index();
 			return $block;
         case 'user_import':
 			$block['subject'] = t('User Import Block');
-			$user_import = saas_blocks_user_import();
-			$block['content'] = $user_import;
+			$block['content'] = saas_blocks_user_import();
 			return $block;
         case 'related_content_list':
 			$block['subject'] = t('Related Content List');
-			$related_content = saas_blocks_related_content();
-			$block['content'] = $related_content;
+			$block['content'] = saas_blocks_related_content();
 			return $block;
     }
 }
@@ -182,8 +174,6 @@ function saas_blocks_traincrumbs(){
     
     if (isset($pathArray[2])) {
         $extraInfo = $pathArray[2];
-        $node = node_load(138);
-        dpm($node);
         if (($extraInfo == "take") && ($pageType == "node")) {
             $pageType = "quiz";
             $pageTypeHuman = "Quiz";
