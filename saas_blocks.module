@@ -119,73 +119,115 @@ function saas_blocks_block_view($block_name = '') {
  *   training breadcrumb output array
  */
 function saas_blocks_traincrumbs(){
-	// parse URL elements
-	$urlArray = parse_url($_SERVER['REQUEST_URI']);
-
-	// current page path
-	$pageArray = explode("/",trim($urlArray['path'],"/"));
-
-	// get the current page and current type from the url
-	if (isset($pageArray[0])) { $curType = $pageArray[0]; } else { $curType = ""; }
-	if (isset($pageArray[1])) { $curPage = $pageArray[1]; } else { $curPage = "saas"; }
+    $url = str_replace("_","-",strtolower($_SERVER['REQUEST_URI']));
+    $urlArray = parse_url($url);
+    $pathArray = explode("/",trim($urlArray['path'],"/"));
+    $pageType = "";
+    $pageTypeHuman = "";
+    $officeType = "saas";
+    $officeTypeHuman = "SAAS";
+    $extraInfo = "";
+    $extraInfoHuman = drupal_get_title();
+    $thumbClass = "saas";
+    $viewCat = "";
+    $viewTtl = "";
     
-    drupal_add_css(drupal_get_path('module', 'traincrumbs') . '/css/traincrumbs.css');
-	// Array of machine => human readable page names
-	$curPageArray = array(
-		"saas" => "SAAS",
-		"admissions" => "Admissions",
-		"financial_aid" => "Financial Aid",
-		"financial-aid" => "Financial Aid",
-		"student_services" => "Student Services",
-		"student-services" => "Student Services",
-		"counseling" => "Counseling",
-		"processing" => "Processing",
-		"registrar" => "Registrar",
-		"other" => "Other",
-		"icat" => "ICAT",
-		"ICAT" => "ICAT",
-		"executive_director" => "Executive Director",
-		"executive-director" => "Executive Director",
-		"technology_applications" => "Technology Applications",
-		"technology-applications" => "Technology Applications",
-		"financial_services" => "Financial Services",
-		"financial-services" => "Financial Services",
-		"treasury_services" => "Treasury Services",
-		"treasury-services" => "Treasury Services",
-	);
-
-	// Array of page types
-	$curTypeArray = array(
-		"directory" => "Directory",
+	$pageArray = array(
 		"news" => "News",
+		"directory" => "Directory",
+		"office" => "Office",
 		"positions" => "Positions",
 		"position" => "Position",
 		"tools" => "Tools",
-		"topics_category" => "topics_category",
-		"topics_title" => "topics_title",
-
+		"topics-category" => "Topics by Category",
+		"topics-title" => "Topics by Title",
+		"topics" => "Topics",
+		"user" => "User",
+		"profile" => "Profile",
+		"quiz" => "Quiz",
+		"node" => "Node",
+		"assessment-manager" => "Assessment Manager",
+		"question-manager" => "Question Manager",
 	);
+    if (isset($pathArray[0])) {
+        $pageType = $pathArray[0];
+        if (isset($pageArray[$pageType])) {
+            $pageTypeHuman = $pageArray[$pageType];
+        }
+    }
 
-	// set human readable variables from machine readable content contained in the url
-	$curPageMachine = $curPage;
-	$curPageHuman = "";
-	if (isset($curPageArray[$curPage])) { $curPageHuman = $curPageArray[$curPage]; }
-			$curPageClass = $curPageMachine;
-			$curPageOffice = $curPageHuman;
+	$officeArray = array(
+		"saas" => "SAAS",
+		"admissions" => "Admissions",
+		"financial-aid" => "Financial Aid",
+		"registrar" => "Registrar",
+		"onestop" => "OneStop",
+		"counseling" => "Counseling",
+		"processing" => "Processing",
+		"student-services" => "Student Services",
+		"other" => "Other",
+		"executive-director" => "Executive Director",
+		"financial-services" => "Financial Services",
+		"icat" => "ICAT",
+		"technology-applications" => "Technology Applications",
+		"treasury-services" => "Treasury Services",
+	);
+    if (isset($pathArray[1])) {
+        $officeType = $pathArray[1];
+        $thumbClass = $officeType;
+        if (isset($officeArray[$officeType])) {
+            $officeTypeHuman = $officeArray[$officeType];
+        }
+    }
+    
+    if (isset($pathArray[2])) {
+        $extraInfo = $pathArray[2];
+        $node = node_load(138);
+        dpm($node);
+        if (($extraInfo == "take") && ($pageType == "node")) {
+            $pageType = "quiz";
+            $pageTypeHuman = "Quiz";
+        }
+        if (($extraInfo == "results") && ($pageType == "node")) {
+            $pageType = "quiz";
+            $pageTypeHuman = "Quiz";
+        }
+    }
 
-			$mainCat = $curPageHuman;
-			$subCat = "";
-			$viewCat = "";
-			$viewTtl = "";
+    switch ($pageType) {
+        case "topics-category":
+            $viewCat = '<a href="/topics-category/'.$officeType.'" class="filteroptions selected" title"Category">Category</a>';
+            $viewTtl = '<a href="/topics-title/'.$officeType.'" class="filteroptions" title"Alphabetical">A-Z</a>';
+            break;
+        case "topics-title":
+            $viewCat = '<a href="/topics-category/'.$officeType.'" class="filteroptions" title"Category">Category</a>';
+            $viewTtl = '<a href="/topics-title/'.$officeType.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
+            break;
+		case "news":
+			isset($_GET["created"]) ? $created=$_GET["created"] : $created=0;
+			switch ($created) {
+				case 5:$extraInfoHuman = "Archive";break;
+				case 4:$extraInfoHuman = "This Year";break;
+				case 3:$extraInfoHuman = "This Month";break;
+				case 2:$extraInfoHuman = "This Week";break;
+				case 1:$extraInfoHuman = "Today";break;
+				default: $extraInfoHuman = "";
+			}
+			break;
+    }
+    
+    $outPre = '<div class="clearfloats"></div><div id="curSection" class="' .  $thumbClass . '">';
+	$outBody =  $pageTypeHuman;
+    if ($officeTypeHuman != "" ) { $outBody .= " . " . $officeTypeHuman; }
+    if ($extraInfoHuman != "" ) { $outBody .= " . " . $extraInfoHuman; }
+    if ($viewCat != "") { $outBody .= '<div id="topic-exposed-filter">' .$viewCat. '&nbsp;|&nbsp;' .$viewTtl. '</div>'; }
+	$outSuf = '</div>';
 
-			$curTypeMachine = $curType;
-			$curTypeHuman = "";
-            
     // Highlight Selected Menu
     // first hide the title    
     $module_path = drupal_get_path('module', 'saas_blocks');
     drupal_add_js('/' . $module_path . '/js/atitle.js', 'file');
-    switch ($curPageHuman) {
+    switch ($officeTypeHuman) {
         case "Admissions"               : $css = 'a[title="Admissions"]      { background-color: #fff; }'; break;
         case "Financial Aid"            : $css = 'a[title="Financial Aid"]   { background-color: #fff; }'; break;
         case "Registrar"                : $css = 'a[title="Registrar"]       { background-color: #fff; }'; break;
@@ -200,51 +242,7 @@ function saas_blocks_traincrumbs(){
         case "Technology Applications"  : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
         case "Treasury Services"        : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
     }
-    if (isset($css)) {drupal_add_css($css, 'inline');}
-			
-  if (isset($curTypeArray[$curType])) { $curTypeHuman = $curTypeArray[$curType]; }
-	switch($curType) {
-		case "news":
-			isset($_GET["created"]) ? $created=$_GET["created"] : $created=0;
-			switch ($created) {
-				case 5:$subCat = "Archive";break;
-				case 4:$subCat = "This Year";break;
-				case 3:$subCat = "This Month";break;
-				case 2:$subCat = "This Week";break;
-				case 1:$subCat = "Today";break;
-				default: $subCat = "";
-			}
-			break;
-		case "directory": $subCat = $curTypeHuman; break;
-        
-		case "positions": $subCat = $curTypeHuman; break;
-        
-		case "position": $subCat = $curTypeHuman . " . " . drupal_get_title();; break;
-
-		case "tools": $subCat = $curTypeHuman; break;
-
-        case "topics-category": 
-			$viewCat = '<a href="/topics-category/'.$curPage.'" class="filteroptions selected" title"Category">Category</a>';
-			$viewTtl = '<a href="/topics-title/'.$curPage.'" class="filteroptions" title"Alphabetical">A-Z</a>';
-			break;
-
-		case "topics-title": 
-			$viewCat = '<a href="/topics-category/'.$curPage.'" class="filteroptions" title"Category">Category</a>';
-			$viewTtl = '<a href="/topics-title/'.$curPage.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
-			break;
-		case "topics":
-			$pageTitle = drupal_get_title();
-			break;
-
-	}
-
-	$outPre = '<div class="clearfloats"></div><div id="curSection" class="' .  $curPageClass . '">';
-	$outBody =  $curPageOffice;
-	if(isset($pageTitle)){ $outBody .= " . " . $pageTitle; }
-	if ($subCat != "") { $outBody .= "&nbsp;.&nbsp;" . $subCat; }
-	if ($viewCat != "") { $outBody .= '<div id="topic-exposed-filter">' .$viewCat. '&nbsp;|&nbsp;' .$viewTtl. '</div>'; }
-	$outSuf = '</div>';
-  
+    if (isset($css)) {drupal_add_css($css, 'inline');}    
 
 	$output = array(
 		'traincrumb output' => array(
@@ -256,6 +254,7 @@ function saas_blocks_traincrumbs(){
 
 	return $output;
 }
+
 
 
 /**
