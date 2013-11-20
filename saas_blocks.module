@@ -808,6 +808,54 @@ function saas_blocks_user_import(){
                             $markup .= "&nbsp;&nbsp;ADDED CAS $netID...<br>";
                         }
 
+                /* ---------------------------------------- CAS ATTRIBUTES ------------------------------------ */        
+                        $full_name = $name;
+                        $preferred_name = $name;
+                        $preferred_first_name = reset(explode(" ",trim($name)));
+                        $preferred_last_name = end(explode(" ",trim($name)));
+
+                        // ADD Full Name
+                        $test = db_query("SELECT field_user_full_name_value FROM field_data_field_user_full_name WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
+                        if ($test === false) {
+                            $field = array();
+                            $field = $field_data;
+                            $field['field_user_full_name_value'] = $full_name;
+                            $result = db_insert('field_data_field_user_full_name')->fields($field)->execute();
+                            $result = db_insert('field_revision_field_user_full_name')->fields($field)->execute();
+                        }
+                        
+                        // ADD Preferred Name
+                        $test = db_query("SELECT field_user_preferred_name_value FROM field_data_field_user_preferred_name WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
+                        if ($test === false) {
+                            $field = array();
+                            $field = $field_data;
+                            $field['field_user_preferred_name_value'] = $preferred_name;
+                            $result = db_insert('field_data_field_user_preferred_name')->fields($field)->execute();
+                            $result = db_insert('field_revision_field_user_preferred_name')->fields($field)->execute();
+                        }
+                        
+                        // ADD Preferred First Name
+                        $test = db_query("SELECT field_user_preferred_first_value FROM field_data_field_user_preferred_first WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
+                        if ($test === false) {
+                            $field = array();
+                            $field = $field_data;
+                            $field['field_user_preferred_first_value'] = $preferred_first_name;
+                            $result = db_insert('field_data_field_user_preferred_first')->fields($field)->execute();
+                            $result = db_insert('field_revision_field_user_preferred_first')->fields($field)->execute();
+                        }
+                        
+                        // ADD Preferred Last Name
+                        $test = db_query("SELECT field_user_preferred_last_value FROM field_data_field_user_preferred_last WHERE entity_id = :entity_id limit 1", array(":entity_id" => $uid))->fetchField();
+                        if ($test === false) {
+                            $field = array();
+                            $field = $field_data;
+                            $field['field_user_preferred_last_value'] = $preferred_last_name;
+                            $result = db_insert('field_data_field_user_preferred_last')->fields($field)->execute();
+                            $result = db_insert('field_revision_field_user_preferred_last')->fields($field)->execute();
+                        }
+                        
+
+                        
                 /* ---------------------------------------- NAME ---------------------------------------- */        
                         // field_data_field_name field_revision_field_name
                         $result = db_query("DELETE FROM field_data_field_name WHERE entity_id = :entity_id", array(":entity_id" => $uid));
