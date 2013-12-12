@@ -154,9 +154,9 @@ function saas_blocks_traincrumbs(){
 		"financial-aid" => "Financial Aid",
 		"registrar" => "Registrar",
 		"onestop" => "OneStop",
-		"counseling" => "Counseling",
-		"processing" => "Processing",
-		"student-services" => "Student Services",
+		"counseling" => "OneStop Counseling",
+		"processing" => "OneStop Processing",
+		"student-services" => "OneStop Student Services",
 		"other" => "Other",
 		"executive-director" => "Executive Director",
 		"financial-services" => "Financial Services",
@@ -212,9 +212,62 @@ function saas_blocks_traincrumbs(){
             break;
     }
     
+    // BREADCRUMB "Back" Link
+    $parentHREF = "";
+    switch ($pageType) {
+        case "news":
+            if(isset($_GET["created"])) {
+                $parentHREF = strtok($_SERVER["REQUEST_URI"],'?');
+            }
+            break;
+        case "positions":
+            if(isset($_GET["name"])) {
+                $parentHREF = strtok($_SERVER["REQUEST_URI"],'?');
+            }
+            break;
+        case "user":
+                $parentHREF = "/directory";
+            break;
+		case "profile":
+                $parentHREF = "/office/" . $officeType;
+			break;
+        case "office":
+                $parentHREF = "/directory";
+            break;
+        case "position":
+                $parentHREF = "/positions";
+            break;
+        case "topics":
+            if(isset($_GET["quiz"])) {
+                $quiz = $_GET["quiz"];
+                $parentNODEID = db_query("SELECT entity_id FROM field_data_field_position_training WHERE (bundle = 'saas_position') AND (field_position_training_target_id = :quiz) limit 1", array(":quiz" => $quiz))->fetchField();
+                $source = "node/" . $parentNODEID;
+                $alias = drupal_lookup_path('alias', $source);
+                $parentHREF = "/" . $alias;
+            } else {
+                $parentHREF = "/topics-category/" . str_replace("-","_",$officeType);
+            }
+            break;
+        case "quiz":
+            if(isset($_GET["quiz"])) {
+                $quiz = $_GET["quiz"];
+                $parentNODEID = db_query("SELECT entity_id FROM field_data_field_position_training WHERE (bundle = 'saas_position') AND (field_position_training_target_id = :quiz) limit 1", array(":quiz" => $quiz))->fetchField();
+                $source = "node/" . $parentNODEID;
+                $alias = drupal_lookup_path('alias', $source);
+                $parentHREF = "/" . $alias;
+            } 
+            break;
+    }
+    
     $outPre = '<div class="clearfloats"></div><div id="curSection" class="' .  $thumbClass . '">';
 	$outBody =  $pageTypeHuman;
-    if ($officeTypeHuman != "" ) { $outBody .= " . " . $officeTypeHuman; }
+    if ($officeTypeHuman != "" ) { 
+        if ($parentHREF != "") {
+            $outBody .= " . " . "<a style='color:white; text-decoration:none;' href='" .$parentHREF. "'>" . $officeTypeHuman . "</a>"; 
+        } else {
+            $outBody .= " . " . $officeTypeHuman; 
+        }
+    }
     if ($extraInfoHuman != "" ) { $outBody .= " . " . $extraInfoHuman; }
     if ($viewCat != "") { $outBody .= '<div id="topic-exposed-filter">' .$viewCat. '&nbsp;|&nbsp;' .$viewTtl. '</div>'; }
 	$outSuf = '</div>';
@@ -228,9 +281,9 @@ function saas_blocks_traincrumbs(){
         case "Financial Aid"            : $css = 'a[title="Financial Aid"]   { background-color: #fff; }'; break;
         case "Registrar"                : $css = 'a[title="Registrar"]       { background-color: #fff; }'; break;
         // onestop
-        case "Counseling"               : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
-        case "Processing"               : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
-        case "Student Services"         : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
+        case "OneStop Counseling"       : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
+        case "OneStop Processing"       : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
+        case "OneStop Student Services" : $css = 'a[title="OneStop"]         { background-color: #fff; }'; break;
         // other
         case "Executive Director"       : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
         case "Financial Services"       : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
