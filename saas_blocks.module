@@ -133,6 +133,8 @@ function saas_blocks_traincrumbs(){
 		"tools" => "Tools",
 		"topics-category" => "Topics by Category",
 		"topics-title" => "Topics by Title",
+		"topics-categories" => "Topics by Categories",
+		"topics-titles" => "Topics by Titles",
 		"topics" => "Topics",
 		"user" => "User",
 		"profile" => "Profile",
@@ -163,6 +165,7 @@ function saas_blocks_traincrumbs(){
 		"icat" => "ICAT",
 		"technology-applications" => "Technology Applications",
 		"treasury-services" => "Treasury Services",
+		"advisement" => "Advisement Center",
 	);
     if (isset($pathArray[1])) {
         $officeType = $pathArray[1];
@@ -171,6 +174,25 @@ function saas_blocks_traincrumbs(){
             $officeTypeHuman = $officeArray[$officeType];
         }
     }
+
+    $registrarArray = array(
+		"athletic-eligibility" => "Athletic Eligibility",
+		"class-scheduling" => "Class Scheduling",
+		"curriculum" => "Curriculum",
+		"data-and-web-management" => "Data and Web Management",
+		"data-entry" => "Data Entry",
+		"discontinuance" => "Discontinuance",
+		"general" => "General",
+		"graduation" => "Graduation",
+		"petitions" => "Petitions",
+		"records-and-registration" => "Records and Registration",
+		"registrars" => "Registrars",
+		"transfer-evaluation" => "Transfer Evaluation"
+    );
+    
+    $advisementArray = array(
+		"general" => "General"
+    );
     
     if (isset($pathArray[2])) {
         $extraInfo = $pathArray[2];
@@ -182,6 +204,16 @@ function saas_blocks_traincrumbs(){
             $pageType = "quiz";
             $pageTypeHuman = "Quiz";
         }
+        if (isset($registrarArray[$extraInfo]) && ($officeType == "registrar")) {
+            $registrarType = $extraInfo;
+            $registrarTypeHuman = $registrarArray[$extraInfo];
+            $extraInfoHuman = $registrarTypeHuman;
+        }
+        if (isset($advisementArray[$extraInfo]) && ($officeType == "advisement")) {
+            $advisementType = $extraInfo;
+            $advisementTypeHuman = $advisementArray[$extraInfo];
+            $extraInfoHuman = $advisementTypeHuman;
+        }
     }
 
     switch ($pageType) {
@@ -192,6 +224,19 @@ function saas_blocks_traincrumbs(){
         case "topics-title":
             $viewCat = '<a href="/topics-category/'.str_replace("-","_",$officeType).'" class="filteroptions" title"Category">Category</a>';
             $viewTtl = '<a href="/topics-title/'.str_replace("-","_",$officeType).'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
+            break;
+        case "topics-categories":
+            if ($officeType == "registrar") {
+                $viewCat = '<a href="/topics-categories/registrar/'.$registrarType.'" class="filteroptions selected" title"Category">Category</a>';
+                $viewTtl = '<a href="/topics-titles/registrar/'.$registrarType.'" class="filteroptions" title"Alphabetical">A-Z</a>';
+            } else { // advisement
+                $viewCat = '<a href="/topics-categories/advisement/'.$advisementType.'" class="filteroptions selected" title"Category">Category</a>';
+                $viewTtl = '<a href="/topics-titles/advisement/'.$advisementType.'" class="filteroptions" title"Alphabetical">A-Z</a>';
+            }
+            break;
+        case "topics-titles":
+            $viewCat = '<a href="/topics-categories/registrar/'.$registrarType.'" class="filteroptions" title"Category">Category</a>';
+            $viewTtl = '<a href="/topics-titles/registrar/'.$registrarType.'" class="filteroptions selected" title"Alphabetical">A-Z</a>';
             break;
 		case "news":
 			isset($_GET["created"]) ? $created=$_GET["created"] : $created=0;
@@ -292,6 +337,25 @@ function saas_blocks_traincrumbs(){
         case "Treasury Services"        : $css = 'a[title="Other"]           { background-color: #fff; }'; break;
     }
     if (isset($css)) {drupal_add_css($css, 'inline');}    
+
+    // ========================================================= SHOW/HIDE MENU ==============================================================
+    // SAAS Division = 8
+    // Non-SAAS Division = 23
+    global $user;
+    $uGroup = db_query("SELECT master_id FROM rap_standard_assignment WHERE (master_type = 'group') AND (slave_type = 'user') AND (slave_id = :uid) limit 1", array(":uid" => $user->uid))->fetchField();
+    $genealogy = $uGroup;
+    while ($uGroup != 0) {
+        $parent = db_query("SELECT parent_group FROM rap_group WHERE id = :gid limit 1", array(":gid" => $uGroup))->fetchField();
+        $genealogy .= "," . $parent;
+        $uGroup = $parent;
+    }
+    $gArray = explode(",",$genealogy);
+    if (array_search(8, $gArray) === FALSE) { // not SAAS Division
+       drupal_add_js("(function ($) { jQuery(document).ready(function($) {   $('a[title=\"Other\"]').parent().css( 'display', 'none' ); });  }(jQuery));", 'inline');
+    } else {
+       drupal_add_js("(function ($) { jQuery(document).ready(function($) {   $('a[title=\"Advisement Centers\"]').parent().css( 'display', 'none' ); });  }(jQuery));", 'inline');
+    }
+    // ========================================================= SHOW/HIDE MENU ==============================================================
 
 	$output = array(
 		'traincrumb output' => array(
