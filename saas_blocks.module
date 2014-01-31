@@ -567,7 +567,20 @@ function saas_blocks_topic_categories_links(){
     // Get the current View
     $path = current_path();
     $pageArray = explode ("/",$path);
-    $view = views_get_view_result("topics_category","page",$pageArray[1]);
+
+    if($pageArray[0] == "topics-categories") {
+        $tmp = views_get_view('topics_category');
+        $tmp->set_display("page_1");
+        $tmp->set_arguments(array($pageArray[1],$pageArray[2]));
+        $tmp->execute();
+        $view = $tmp->result;
+    } else {
+        $tmp = views_get_view('topics_category');
+        $tmp->set_display("page");
+        $tmp->set_arguments(array($pageArray[1]));
+        $tmp->execute();
+        $view = $tmp->result;
+    }
     $taxTerms = Array();
     foreach($view as $nodeInfo) {
         $node = node_load($nodeInfo->nid);
