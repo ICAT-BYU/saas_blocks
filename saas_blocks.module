@@ -867,7 +867,7 @@ function saas_blocks_user_import(){
             $position   = intval(trim($user[6]));
             $location   = substr(preg_replace('/[^a-zA-Z0-9 -]/','',trim($user[7])), 0, 100);
             $phone      = substr(preg_replace('/[^0-9-]/','',trim($user[8])), 0, 6);
-            $about      = substr(preg_replace('/[^a-zA-Z0-9 <>!,.-]/',' ',trim($user[9])), 0, 500);
+            $about      = substr(preg_replace('/[^a-zA-Z0-9 <>!,.-]/',' ',trim($user[9])), 0, 2200); $about = preg_replace('/\s+/', ' ',$about);
             $dob        = date_parse(trim($user[10]));
             if ($dob === false) {
                 $birthday = "1970-01-01";
