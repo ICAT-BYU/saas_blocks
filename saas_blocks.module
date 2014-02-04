@@ -581,19 +581,11 @@ function saas_blocks_topic_categories_links(){
         $tmp->execute();
         $view = $tmp->result;
     }
+
     $taxTerms = Array();
     foreach($view as $nodeInfo) {
-        $node = node_load($nodeInfo->nid);
-        if (node_access('view',$node,$user)) {
-            foreach($taxFields as $tf) {
-                if (isset($node->$tf)) {
-                    $tmp = $node->$tf;
-                    if (isset($tmp["und"][0]["tid"])) {
-                        $term = taxonomy_term_load($tmp["und"][0]["tid"]);
-                        $taxTerms[] = $term->name;
-                    }
-                }
-            }
+        if (isset($nodeInfo->taxonomy_term_data_node_name)) {
+            $taxTerms[] = $nodeInfo->taxonomy_term_data_node_name;
         }
     }
     // Get a Unique, Sorted list of Taxonomy Terms 
