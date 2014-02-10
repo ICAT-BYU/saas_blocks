@@ -58,6 +58,10 @@ function saas_blocks_block_info() {
         'info' => t('User Import Block'),
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
+    $blocks['topic_page_order_edit'] = array(
+        'info' => t('Topic Page Order Edit Button'),
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
     return $blocks;
 }
 
@@ -100,9 +104,27 @@ function saas_blocks_block_view($block_name = '') {
 			$block['subject'] = t('Related Content List');
 			$block['content'] = saas_blocks_related_content();
 			return $block;
+        case 'topic_page_order_edit':
+			$block['subject'] = t('Topic Page Order Edit Button');
+			$block['content'] = saas_blocks_topic_page_order_edit();
+			return $block;
     }
 }
-    
+
+/*
+ * ================================================================ MENU ============================================================
+ * Implementation of hook_menu()
+ */
+function saas_blocks_menu() {
+    $items['ajax/saveorder' ] = array(
+        'title' => 'Signage Event',
+        'page callback' => 'saas_blocks_SaveOrderAjax',
+        'access arguments' => array('access content'),
+        'type' => MENU_CALLBACK
+    );
+    return $items;
+}
+
 
 /**
  * Custom content function. 
@@ -582,21 +604,66 @@ function saas_blocks_topic_categories_links(){
         $view = $tmp->result;
     }
 
+
+    // Allow draggable in EDIT mode
+    if (isset($_GET["edit"])) {
+        $module_path = drupal_get_path('module', 'saas_blocks');
+        $handleImg = '<img src="/' . $module_path . '/images/handle.png">';
+        drupal_add_css('.sortable-topicpages {list-style-type:none; padding-top:4px; margin:0px;} ', 'inline');
+        drupal_add_css('.sortable-topicpages li{padding-left: 0px; margin-left:-19px; cursor:move; color:#444444;} ', 'inline');
+        drupal_add_css('.view-taxonomy {border-bottom: 1px solid #ccc;font-size: 16px;font-weight: normal;font-family: Rockwell,serif; color: #4d6079; margin-top:1.65em} ', 'inline');
+
+        drupal_add_library('system', 'ui');
+        drupal_add_library('system', 'ui.sortable');
+        drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('.view').css('display','none'); }); }(jQuery));", 'inline');
+
+        $viewPage = '<div class="view view-content">';
+        $currentTax = "";
+        $first = true;
+        $count = 0;
+        $sortableStr = "";
+        $buildArrayStr = "";
+        foreach($view as $nodeInfo) {
+            if ($currentTax != $nodeInfo->taxonomy_term_data_node_name) {
+                $currentTax = $nodeInfo->taxonomy_term_data_node_name;
+                if (!$first) {
+                    $viewPage .= '</ul>';
+                } else {
+                    $first = false;
+                }
+                $viewPage .= '<a name="' .$currentTax. '"><h3 class="view-taxonomy">' .$currentTax. '</h3></a>';
+                $count++;
+                $viewPage .= '<ul class="sortable-topicpages" id="sortable'.$count.'">';
+                $sortableStr .= "$('#sortable".$count."').sortable();";
+                $buildArrayStr .= "sorted=sorted.concat($('#sortable".$count."').sortable('toArray'));";
+            }
+            $viewPage .= '<li id="'. $nodeInfo->nid .'">' . $handleImg . '&nbsp;' . $nodeInfo->node_title . '</li>'; //$nodeInfo->nid
+        }
+        $viewPage .= '</ul>';
+        $viewPage .= '</div>';
+
+        $viewPage = str_replace("'", "\'", $viewPage);
+        drupal_add_js("(function ($) { jQuery(document).ready(function($) { $('" .$viewPage. "').insertAfter('#main-content'); }); }(jQuery));", 'inline');
+        drupal_add_js("(function ($) { jQuery(document).ready(function($) { " .$sortableStr. " }); }(jQuery));", 'inline');
+        $ajaxPost = '$.ajax({ timeout: 2000, dataType: "json", url: "/ajax/saveorder", type: "POST", data: "nids=" + sorted.toString(), success: function(data) { if(data["status"] == "ok") alert("New Order Saved."); }, error: function(jqXHR, textStatus, errorThrown) { console.log(textStatus, errorThrown); } });';
+        drupal_add_js("function sortOrder() { (function ($){ var sorted = new Array(); " .$buildArrayStr . $ajaxPost." console.log(sorted.toString());}(jQuery)) }", 'inline');
+        
+    } 
+
     $taxTerms = Array();
     foreach($view as $nodeInfo) {
         if (isset($nodeInfo->taxonomy_term_data_node_name)) {
             $taxTerms[] = $nodeInfo->taxonomy_term_data_node_name;
         }
     }
+
     // Get a Unique, Sorted list of Taxonomy Terms 
     $Taxonomy = array_unique($taxTerms);
-    //sort($Taxonomy);
-    
-	$links = '<ul class="topics-navigation">';
+    $links = '<ul class="topics-navigation">';
     foreach($Taxonomy as $item) {
         $links .= '<li><a href="#' . $item . '">' . $item . '</a></li>';
     }
-	$links .= '</ul>';
+    $links .= '</ul>';
     
     $output = array (
         '#type' => 'markup',
@@ -608,6 +675,53 @@ function saas_blocks_topic_categories_links(){
     return $output;
 }
 
+function saas_blocks_SaveOrderAjax(){
+    if (isset($_POST["nids"])) {
+        $nids = explode(',', $_POST["nids"]);
+        $count = 0;
+        foreach($nids as $nid) {
+            $count++;
+            $result = db_query("UPDATE node SET sticky = :sticky WHERE nid = :nid", array(":sticky" => $count,":nid" => $nid));
+        }
+        $send = array( "status" => "ok" );
+        drupal_json_output($send);
+    } else {
+        $send = array("status" => "error");
+        drupal_json_output($send);
+    }
+}
+
+function saas_blocks_topic_page_order_edit(){
+    $buttonCSS = ".page-order-edit-button a{-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;box-shadow:inset 0px 1px 0px 0px #ffffff;background-color:#ededed;-moz-border-radius:6px;-webkit-border-radius:6px;border-radius:6px;border:1px solid #dcdcdc;display:inline-block;color:#777777;font-family:arial;font-size:15px;font-weight:bold;padding:6px 10px;text-decoration:none;text-shadow:1px 1px 0px #ffffff; float:left;";
+    $buttonCSS .= ".page-order-edit-button a:hover {background-color:#dfdfdf;}";
+    $buttonCSS .= ".page-order-edit-button a:active {position:relative;top:1px;}";    
+
+    $editButtonPre = "<div id='page-order-edit-button' class='page-order-edit-button'>";
+    drupal_add_css($buttonCSS, 'inline');
+    
+    $url = $_SERVER['REQUEST_URI'];
+    if (isset($_GET["edit"])) {
+        $newUrl = parse_url($url, PHP_URL_PATH);
+        $buttonTxt = "Edit Off";
+        $saveButton = $editButtonPre . "<a href='javascript:sortOrder();'>Save</a></div>";
+    } else {
+        $newUrl = parse_url($url, PHP_URL_PATH) . "?edit=1";
+        $buttonTxt = "Edit On";
+        $saveButton = "";
+    }
+    $editButton = $editButtonPre . "<a href='" . $newUrl . "'>" .$buttonTxt. "</a></div>";
+    $editButton .= $saveButton;
+        
+    $output = array (
+        '#type' => 'markup',
+        '#prefix' => '',
+        '#markup' => $editButton,
+        '#suffix' => '',
+        );
+
+    return $output;
+        
+}
 
 
 /**
