@@ -578,7 +578,6 @@ function saas_blocks_related_content() {
  *   topic page output array
  */
 function saas_blocks_topic_categories_links(){
-    global $user;
     // Create an Array of Taxonomy Fields
     $results = db_query("SELECT field_name FROM field_config WHERE (type = 'taxonomy_term_reference') AND (field_name like '%_category') ");
     $taxFields = Array();
@@ -586,6 +585,18 @@ function saas_blocks_topic_categories_links(){
         $taxFields[] = $line->field_name;
     }
 
+    global $user;
+    $roles = $user->roles;
+    if ( ( array_search("administrator",$roles) === false ) && ( array_search("Content Manager",$roles) === false )) {
+        $draggable = 0;
+    } else {
+        $draggable = 1;
+    }
+    // only draggable in EDIT mode
+    if (!isset($_GET["edit"])) {
+        $draggable = 0;
+    }
+    
     // Get the current View
     $path = current_path();
     $pageArray = explode ("/",$path);
@@ -604,9 +615,8 @@ function saas_blocks_topic_categories_links(){
         $view = $tmp->result;
     }
 
-
     // Allow draggable in EDIT mode
-    if (isset($_GET["edit"])) {
+    if ($draggable) {
         $module_path = drupal_get_path('module', 'saas_blocks');
         $handleImg = '<img src="/' . $module_path . '/images/handle.png">';
         drupal_add_css('.sortable-topicpages {list-style-type:none; padding-top:4px; margin:0px;} ', 'inline');
