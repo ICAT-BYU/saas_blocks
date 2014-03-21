@@ -62,6 +62,10 @@ function saas_blocks_block_info() {
         'info' => t('Topic Page Order Edit Button'),
         'cache' => DRUPAL_CACHE_GLOBAL,
     );
+    $blocks['this_weeks_birthdays'] = array(
+        'info' => t('This Weeks Staff Birthdays'),
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
     return $blocks;
 }
 
@@ -108,8 +112,13 @@ function saas_blocks_block_view($block_name = '') {
 			$block['subject'] = t('Topic Page Order Edit Button');
 			$block['content'] = saas_blocks_topic_page_order_edit();
 			return $block;
+        case 'this_weeks_birthdays':
+			$block['subject'] = t('This Weeks Staff Birthdays');
+			$block['content'] = saas_blocks_this_weeks_birthdays();
+			return $block;
     }
 }
+
 
 /*
  * ================================================================ MENU ============================================================
@@ -842,6 +851,68 @@ function saas_blocks_icat_power(){
   
   return $output;
 }
+
+function saas_blocks_this_weeks_birthdays(){
+
+    $dateArray = array();
+    $humanDateArray = array();
+    for($i=0;$i<7;++$i) {
+        $dateArray[] = date('M d', strtotime('today +' .$i. ' days'));
+        if ($i == 0) {
+            $humanDateArray[] = "Today";
+        } else if ($i == 1) {
+            $humanDateArray[] = "Tomorrow";
+        } else {
+            $humanDateArray[] = date('D, F d', strtotime('today +' .$i. ' days'));
+        }
+    }
+    
+    $queryStr = " SELECT b.field_user_birthday_value, pn.field_user_preferred_name_value, n.field_user_full_name_value, o.field_user_office_tid, tax.name ";
+    $queryStr.= " FROM field_data_field_user_birthday b";
+    $queryStr.= " JOIN field_data_field_user_full_name n on n.entity_id = b.entity_id";
+    $queryStr.= " JOIN field_data_field_user_preferred_name pn on pn.entity_id = b.entity_id";
+    $queryStr.= " JOIN field_data_field_user_office o on o.entity_id = b.entity_id";
+    $queryStr.= " JOIN taxonomy_term_data tax on tax.tid = o.field_user_office_tid";
+    $queryStr.= " WHERE ";
+    $queryStr.= "    ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +0 days'))."' )";
+    $queryStr.= " OR ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +1 days'))."' )";
+    $queryStr.= " OR ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +2 days'))."' )";
+    $queryStr.= " OR ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +3 days'))."' )";
+    $queryStr.= " OR ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +4 days'))."' )";
+    $queryStr.= " OR ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +5 days'))."' )";
+    $queryStr.= " OR ( CONCAT(DAY(b.field_user_birthday_value),'-',MONTH(b.field_user_birthday_value)) = '".date('j-n', strtotime('today +6 days'))."' )";
+    $queryStr.= " ORDER BY dayofyear(b.field_user_birthday_value),  n.field_user_full_name_value";
+    
+    $birthdayLIST = db_query($queryStr);
+    $markup = "<div class='birthdays'>";
+    $thisDate = "";
+    foreach($birthdayLIST as $birthday) { 
+        $prettyProfile = "/profile/" . strtolower(str_replace(" ","-",$birthday->name)) . "/" . strtolower(str_replace(" ","-",$birthday->field_user_full_name_value));
+        $prettyDate = $humanDateArray[array_search(date("M d",strtotime($birthday->field_user_birthday_value)), $dateArray)];
+        //$prettyDate = date("M d",strtotime($birthday->field_user_birthday_value));
+        if ($thisDate != $prettyDate) {
+            $markup.= "<div class='birthday-date'>" .$prettyDate. "</div>";
+            $thisDate = $prettyDate;
+        }
+        
+        if (trim($birthday->field_user_preferred_name_value) == "") {
+            $prettyName = $birthday->field_user_full_name_value;
+        } else {
+            $prettyName = $birthday->field_user_preferred_name_value;
+        }
+        $markup.= "<div class='birthday-subject'><a href='" .$prettyProfile. "'><span>" .$prettyName. "</span></a></div>";
+    }
+    $markup.= "</div>";
+    
+  $output = array (
+  '#type' => 'markup',
+  '#markup' => $markup,
+  );
+
+  return $output;
+
+}
+
 
 /**
  * Custom Profile Info function. 
